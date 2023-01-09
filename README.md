@@ -20,3 +20,7 @@ Typically, you might set up an `bufio.Reader` or `bufio.Scanner` to read data li
   - `jq.Pipeline` can be used to map every line to the output of a JQ query, for example.
 - `pipe.NewStream` offers a way to create a buffered pipe between a writer and a `Stream`.
   - Package `streamexec` uses this to attach a `Stream` to an `exec.Cmd`.
+
+## Background
+
+Some of the ideas in this package started in [`sourcegraph/run`](https://github.com/sourcegraph/run), where we were trying to build utilities that [made it easier to write bash-esque scripts using Go](https://github.com/sourcegraph/sourcegraph/blob/main/doc/dev/adr/1652433602-use-go-for-scripting.md), namely being able to do things you would often to in scripts such as grepping and iterating over lines.
