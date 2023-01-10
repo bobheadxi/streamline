@@ -16,18 +16,16 @@ import (
 func ExampleStream_WithPipeline() {
 	data := strings.NewReader(`3
 4
+4.8
 7
 5
 2`)
 
 	lines, _ := streamline.New(data).
-		// Pipeline to discard even numbers
-		WithPipeline(pipeline.Map(func(line []byte) ([]byte, error) {
-			v, _ := strconv.Atoi(string(line))
-			if v%2 > 0 {
-				return nil, nil
-			}
-			return []byte(strconv.Itoa(v)), nil
+		// Pipeline to discard even and non-integer numbers
+		WithPipeline(pipeline.Filter(func(line []byte) bool {
+			v, err := strconv.Atoi(string(line))
+			return err == nil && v%2 == 0
 		})).
 		Lines()
 	fmt.Println(lines)
@@ -58,12 +56,9 @@ Still loading...
 
 	lines, _ := streamline.New(data).
 		WithPipeline(pipeline.MultiPipeline{
-			// Discard non-JSON lines
-			pipeline.Map(func(line []byte) ([]byte, error) {
-				if !bytes.HasPrefix(line, []byte{'{'}) {
-					return nil, nil
-				}
-				return line, nil
+			// Pipeline to discard non-JSON lines
+			pipeline.Filter(func(line []byte) bool {
+				return bytes.HasPrefix(line, []byte{'{'})
 			}),
 			// Execute JQ query for each line
 			jq.Pipeline(".message"),
@@ -81,12 +76,9 @@ Still loading...
 }`)
 
 	stream := streamline.New(data).
-		// Pipeline to discard even numbers
-		WithPipeline(pipeline.Map(func(line []byte) ([]byte, error) {
-			if bytes.Contains(line, []byte("...")) {
-				return nil, nil
-			}
-			return line, nil
+		// Pipeline to discard loading indicators
+		WithPipeline(pipeline.Filter(func(line []byte) bool {
+			return !bytes.Contains(line, []byte("..."))
 		}))
 
 	message, _ := jq.Query(stream, ".message")

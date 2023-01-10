@@ -24,8 +24,8 @@ func TestStream(t *testing.T) {
 func TestStreamReader(t *testing.T) {
 	t.Run("io.Read", func(t *testing.T) {
 		stream := streamline.New(strings.NewReader("foo bar baz\nbaz bar\nhello world")).
-			WithPipeline(pipeline.Map(func(line []byte) ([]byte, error) {
-				return bytes.ReplaceAll(line, []byte{' '}, []byte{'-'}), nil
+			WithPipeline(pipeline.Map(func(line []byte) []byte {
+				return bytes.ReplaceAll(line, []byte{' '}, []byte{'-'})
 			}))
 
 		p := make([]byte, 5)
@@ -53,8 +53,8 @@ func TestStreamReader(t *testing.T) {
 
 	t.Run("io.ReadAll", func(t *testing.T) {
 		stream := streamline.New(strings.NewReader("foo bar baz\nbaz bar\nhello world")).
-			WithPipeline(pipeline.Map(func(line []byte) ([]byte, error) {
-				return bytes.ReplaceAll(line, []byte{' '}, []byte{'-'}), nil
+			WithPipeline(pipeline.Map(func(line []byte) []byte {
+				return bytes.ReplaceAll(line, []byte{' '}, []byte{'-'})
 			}))
 
 		all, err := io.ReadAll(stream)

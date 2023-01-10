@@ -13,10 +13,10 @@ import (
 func Pipeline(query string) pipeline.Pipeline {
 	jqCode, err := buildJQ(query)
 	if err != nil {
-		return pipeline.Map(func(line []byte) ([]byte, error) { return nil, err })
+		return pipeline.ErrMap(func(line []byte) ([]byte, error) { return nil, err })
 	}
 
-	return pipeline.Map(func(line []byte) ([]byte, error) {
+	return pipeline.ErrMap(func(line []byte) ([]byte, error) {
 		if len(line) == 0 {
 			return line, nil
 		}
