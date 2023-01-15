@@ -14,51 +14,134 @@ import (
 )
 
 func TestStream(t *testing.T) {
-	s := streamline.New(strings.NewReader("foo\nbar\nbaz"))
+	newStream := func() *streamline.Stream {
+		return streamline.New(strings.NewReader("foo bar baz\nbaz bar\nhello world"))
+	}
 
-	lines, err := s.Lines()
-	require.NoError(t, err)
-	autogold.Want("collected lines", []string{"foo", "bar", "baz"}).Equal(t, lines)
+	for _, tc := range []struct {
+		generate func(s *streamline.Stream) (any, error)
+		wantErr  bool
+		want     autogold.Value
+	}{
+		{
+			generate: func(s *streamline.Stream) (any, error) { return s.Lines() },
+			want:     autogold.Want("Lines", []string{"foo bar baz", "baz bar", "hello world"}),
+		},
+		{
+			generate: func(s *streamline.Stream) (any, error) { return s.String() },
+			want:     autogold.Want("String", "foo bar baz\nbaz bar\nhello world"),
+		},
+		{
+			generate: func(s *streamline.Stream) (any, error) {
+				v, err := s.Bytes()
+				return string(v), err
+			},
+			want: autogold.Want("Bytes", "foo bar baz\nbaz bar\nhello world"),
+		},
+	} {
+		t.Run(tc.want.Name(), func(t *testing.T) {
+			got, err := tc.generate(newStream())
+			if tc.wantErr {
+				require.Error(t, err)
+				tc.want.Equal(t, err.Error())
+			} else {
+				assert.NoError(t, err)
+				tc.want.Equal(t, got)
+			}
+		})
+	}
+}
+
+func TestStreamWithPipeline(t *testing.T) {
+	newStream := func() *streamline.Stream {
+		return streamline.New(strings.NewReader("foo bar baz\nbaz bar\nhello world")).
+			WithPipeline(pipeline.Map(func(line []byte) []byte {
+				return bytes.ReplaceAll(line, []byte{' '}, []byte{'-'})
+			}))
+	}
+
+	for _, tc := range []struct {
+		generate func(s *streamline.Stream) (any, error)
+		wantErr  bool
+		want     autogold.Value
+	}{
+		{
+			generate: func(s *streamline.Stream) (any, error) { return s.Lines() },
+			want:     autogold.Want("WithPipeline Lines", []string{"foo-bar-baz", "baz-bar", "hello-world"}),
+		},
+		{
+			generate: func(s *streamline.Stream) (any, error) { return s.String() },
+			want:     autogold.Want("WithPipeline String", "foo-bar-bazbaz-barhello-world"),
+		},
+		{
+			generate: func(s *streamline.Stream) (any, error) {
+				v, err := s.Bytes()
+				return string(v), err
+			},
+			want: autogold.Want("WithPipeline Bytes", "foo-bar-bazbaz-barhello-world"),
+		},
+	} {
+		t.Run(tc.want.Name(), func(t *testing.T) {
+			got, err := tc.generate(newStream())
+			if tc.wantErr {
+				require.Error(t, err)
+				tc.want.Equal(t, err.Error())
+			} else {
+				assert.NoError(t, err)
+				tc.want.Equal(t, got)
+			}
+		})
+	}
 }
 
 func TestStreamReader(t *testing.T) {
-	t.Run("io.Read", func(t *testing.T) {
-		stream := streamline.New(strings.NewReader("foo bar baz\nbaz bar\nhello world")).
-			WithPipeline(pipeline.Map(func(line []byte) []byte {
-				return bytes.ReplaceAll(line, []byte{' '}, []byte{'-'})
-			}))
-
-		p := make([]byte, 5)
-		n, err := stream.Read(p)
-		assert.NoError(t, err)
-		assert.NotZero(t, n)
-		autogold.Want("chunk 1", "foo-b").Equal(t, string(p[:n]))
-
-		p = make([]byte, 5)
-		n, err = stream.Read(p)
-		assert.NoError(t, err)
-		assert.NotZero(t, n)
-		autogold.Want("chunk 2", "ar-ba").Equal(t, string(p[:n]))
-
-		p = make([]byte, 5)
-		n, err = stream.Read(p)
-		assert.NoError(t, err)
-		assert.NotZero(t, n)
-		autogold.Want("chunk 3", "z\n").Equal(t, string(p[:n]))
+	t.Run("io.ReadAll", func(t *testing.T) {
+		stream := streamline.New(strings.NewReader("foo bar baz\nbaz bar\nhello world"))
 
 		all, err := io.ReadAll(stream)
 		assert.NoError(t, err)
-		autogold.Want("all remaining", "baz-bar\nhello-world\n").Equal(t, string(all))
+		autogold.Want("ReadAll", "foo bar baz\nbaz bar\nhello world").Equal(t, string(all))
 	})
 
-	t.Run("io.ReadAll", func(t *testing.T) {
-		stream := streamline.New(strings.NewReader("foo bar baz\nbaz bar\nhello world")).
-			WithPipeline(pipeline.Map(func(line []byte) []byte {
-				return bytes.ReplaceAll(line, []byte{' '}, []byte{'-'})
-			}))
+	t.Run("WithPipeline", func(t *testing.T) {
+		t.Run("io.Read", func(t *testing.T) {
+			stream := streamline.New(strings.NewReader("foo bar baz\nbaz bar\nhello world")).
+				WithPipeline(pipeline.Map(func(line []byte) []byte {
+					return bytes.ReplaceAll(line, []byte{' '}, []byte{'-'})
+				}))
 
-		all, err := io.ReadAll(stream)
-		assert.NoError(t, err)
-		autogold.Want("collected all", "foo-bar-baz\nbaz-bar\nhello-world\n").Equal(t, string(all))
+			p := make([]byte, 5)
+			n, err := stream.Read(p)
+			assert.NoError(t, err)
+			assert.NotZero(t, n)
+			autogold.Want("WithPipeline.Read: chunk 1", "foo-b").Equal(t, string(p[:n]))
+
+			p = make([]byte, 5)
+			n, err = stream.Read(p)
+			assert.NoError(t, err)
+			assert.NotZero(t, n)
+			autogold.Want("WithPipeline.Read: chunk 2", "ar-ba").Equal(t, string(p[:n]))
+
+			p = make([]byte, 5)
+			n, err = stream.Read(p)
+			assert.NoError(t, err)
+			assert.NotZero(t, n)
+			autogold.Want("WithPipeline.Read: chunk 3", "z\n").Equal(t, string(p[:n]))
+
+			all, err := io.ReadAll(stream)
+			assert.NoError(t, err)
+			autogold.Want("WithPipeline.Read: all remaining", "baz-bar\nhello-world\n").Equal(t, string(all))
+		})
+
+		t.Run("io.ReadAll", func(t *testing.T) {
+			stream := streamline.New(strings.NewReader("foo bar baz\nbaz bar\nhello world")).
+				WithPipeline(pipeline.Map(func(line []byte) []byte {
+					return bytes.ReplaceAll(line, []byte{' '}, []byte{'-'})
+				}))
+
+			all, err := io.ReadAll(stream)
+			assert.NoError(t, err)
+			autogold.Want("WithPipeline.ReadAll", "foo-bar-baz\nbaz-bar\nhello-world\n").Equal(t, string(all))
+		})
 	})
 }

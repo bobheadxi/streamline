@@ -98,7 +98,7 @@ func (o *Stream) Lines() ([]string, error) {
 // it will also propagate the error.
 func (o *Stream) String() (string, error) {
 	var sb strings.Builder
-	_, err := io.Copy(&sb, o.reader)
+	_, err := io.Copy(&sb, o) // use Stream implementation of io
 	data := strings.TrimSuffix(sb.String(), "\n")
 	if err != nil {
 		return data, err
@@ -112,7 +112,7 @@ func (o *Stream) String() (string, error) {
 // it will also propagate the error.
 func (o *Stream) Bytes() ([]byte, error) {
 	var b bytes.Buffer
-	_, err := io.Copy(&b, o.reader)
+	_, err := io.Copy(&b, o) // use Stream implementation of io
 	data := bytes.TrimSuffix(b.Bytes(), []byte{'\n'})
 	if err != nil {
 		return data, err
@@ -126,7 +126,7 @@ var _ io.WriterTo = (*Stream)(nil)
 // handling.
 func (o *Stream) WriteTo(dst io.Writer) (int64, error) {
 	if o.pipeline.Inactive() {
-		// Happy path, do a straight read
+		// Happy path, do a straight read from the underlying source
 		return io.Copy(dst, o.reader)
 	}
 
