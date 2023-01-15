@@ -3,6 +3,7 @@
 [![pipeline](https://github.com/bobheadxi/streamline/actions/workflows/pipeline.yaml/badge.svg)](https://github.com/bobheadxi/streamline/actions/workflows/pipeline.yaml)
 [![codecov](https://codecov.io/gh/bobheadxi/streamline/branch/main/graph/badge.svg?token=f1VZULSJsT)](https://codecov.io/gh/bobheadxi/streamline)
 [![Go Report Card](https://goreportcard.com/badge/go.bobheadxi.dev/streamline)](https://goreportcard.com/report/go.bobheadxi.dev/streamline)
+[![benchmarks](https://img.shields.io/website/https/bobheadxi.dev/streamline.svg?down_color=red&down_message=offline&label=benchmarks&up_message=live)](https://bobheadxi.dev/streamline)
 
 Handle your data, line by line.
 
