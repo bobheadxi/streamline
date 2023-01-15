@@ -85,3 +85,35 @@ func BenchmarkStreamLinesWithPipeline(b *testing.B) {
 		assert.NoError(b, err)
 	}
 }
+
+func BenchmarkIoReadAll(b *testing.B) {
+	input := generateInput()
+
+	for i := 0; i < b.N; i++ {
+		_, err := io.ReadAll(input)
+		assert.NoError(b, err)
+	}
+}
+
+func BenchmarkStreamReadAll(b *testing.B) {
+	input := generateInput()
+
+	for i := 0; i < b.N; i++ {
+		s := streamline.New(input)
+		_, err := io.ReadAll(s)
+		assert.NoError(b, err)
+	}
+}
+
+func BenchmarkStreamReadAllWithPipeline(b *testing.B) {
+	b.Skip("StreamReadAllWithPipeline is so inefficient that this benchmark can cause a timeout - see TODO on Stream.Read")
+
+	input := generateInput()
+
+	for i := 0; i < b.N; i++ {
+		s := streamline.New(input).
+			WithPipeline(pipeline.Map(func(line []byte) []byte { return line }))
+		_, err := io.ReadAll(s)
+		assert.NoError(b, err)
+	}
+}

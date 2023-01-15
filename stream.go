@@ -123,6 +123,10 @@ var _ io.Reader = (*Stream)(nil)
 
 // Read populates p with processed data. It allows Stream to effectively be compatible
 // with anything that accepts an io.Reader.
+//
+// WARNING: This implementation is currently VERY inefficient with Pipeline configured.
+// Prefer to avoid calling Read() by calling WriteTo() instead, e.g. via io.Copy instead
+// of io.ReadAll.
 func (o *Stream) Read(p []byte) (int, error) {
 	if o.pipeline.Inactive() {
 		// Happy path, do a straight read
