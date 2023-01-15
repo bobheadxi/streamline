@@ -28,7 +28,7 @@ type Cmd struct {
 // configured with pipeline.Pipeline and run with (*Cmd).Run(...).
 //
 // Output piping is handled by buffers created by streamline/pipe.NewStream(...).
-func Attach(cmd *exec.Cmd, mode StreamMode, pipelines ...pipeline.Pipeline) *Cmd {
+func Attach(cmd *exec.Cmd, mode StreamMode) *Cmd {
 	streamWriter, stream := pipe.NewStream()
 
 	switch mode {
