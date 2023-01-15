@@ -8,7 +8,7 @@ package pipeline
 // (*Stream).Stream(...) and (*Stream).StreamBytes(...) instead.
 type Pipeline interface {
 	// Inactive indicates if this Pipeline does anything at all. It is used internally by
-	// streamline.Stream to optimize for cases where accomodating a Pipeline adds overhead.
+	// streamline.Stream to optimize for cases where accommodating a Pipeline adds overhead.
 	Inactive() bool
 	// ProcessLine returns a modified, unmodified, or omitted line. To omit a line, return
 	// a nil []byte - an empty []byte will be retained.
