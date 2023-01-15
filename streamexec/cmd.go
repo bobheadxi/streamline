@@ -12,8 +12,12 @@ import (
 type StreamMode int
 
 const (
-	Combined StreamMode = iota
-	Stdout
+	// Combined streams both Stdout and Stderr.
+	Combined StreamMode = Stdout | Stderr
+
+	// Stdout only streams cmd.Stdout.
+	Stdout StreamMode = 1 << iota
+	// Stderr only streams cmd.Stderr.
 	Stderr
 )
 
@@ -31,13 +35,10 @@ type Cmd struct {
 func Attach(cmd *exec.Cmd, mode StreamMode) *Cmd {
 	streamWriter, stream := pipe.NewStream()
 
-	switch mode {
-	case Combined:
+	if mode&Stdout != 0 {
 		cmd.Stdout = streamWriter
-		cmd.Stderr = streamWriter
-	case Stdout:
-		cmd.Stdout = streamWriter
-	case Stderr:
+	}
+	if mode&Stderr != 0 {
 		cmd.Stderr = streamWriter
 	}
 
