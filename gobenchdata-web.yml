@@ -1,5 +1,5 @@
 title: go.bobheadxi.dev/streamline benchmarks
 description: Benchmarks generated using 'gobenchdata'
-repository: https://github.com/bobheadxi/gobenchdata
+repository: https://github.com/bobheadxi/streamline
 benchmarksFile: benchmarks.json
 chartGroups: []
