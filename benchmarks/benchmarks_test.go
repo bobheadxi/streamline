@@ -64,3 +64,24 @@ func BenchmarkStreamBytesWithPipeline(b *testing.B) {
 		assert.NoError(b, err)
 	}
 }
+
+func BenchmarkStreamLines(b *testing.B) {
+	input := generateInput()
+
+	for i := 0; i < b.N; i++ {
+		s := streamline.New(input)
+		_, err := s.Lines()
+		assert.NoError(b, err)
+	}
+}
+
+func BenchmarkStreamLinesWithPipeline(b *testing.B) {
+	input := generateInput()
+
+	for i := 0; i < b.N; i++ {
+		s := streamline.New(input).
+			WithPipeline(pipeline.Map(func(line []byte) []byte { return line }))
+		_, err := s.Lines()
+		assert.NoError(b, err)
+	}
+}
