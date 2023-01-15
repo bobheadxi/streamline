@@ -48,4 +48,4 @@ jobs:
         INPUT_GO_TEST_FLAGS: -run=^$
         # 'push' event only triggers on pushes to main
         INPUT_PUBLISH: ${{ github.event_name == 'push' }}
-        INPUT_PUBLISH_BRANCH: gh-pages
+        INPUT_PUBLISH_BRANCH: benchmarks
