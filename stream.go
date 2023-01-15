@@ -72,24 +72,11 @@ func (o *Stream) StreamBytes(dst LineHandler[[]byte]) error {
 // This method will block until the input returns an error. Unless the error is io.EOF,
 // it will also propagate the error.
 func (o *Stream) Lines() ([]string, error) {
-	// export lines
-	linesC := make(chan string, 3)
-	errC := make(chan error)
-	go func() {
-		err := o.Stream(func(line string) error {
-			linesC <- line
-			return nil
-		})
-		close(linesC)
-		errC <- err
-	}()
-
 	lines := make([]string, 0, 10)
-	for line := range linesC {
+	return lines, o.Stream(func(line string) error {
 		lines = append(lines, line)
-	}
-
-	return lines, <-errC
+		return nil
+	})
 }
 
 // String collects all processed output as a string.
