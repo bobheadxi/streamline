@@ -132,7 +132,7 @@ func (o *Stream) WriteTo(dst io.Writer) (int64, error) {
 
 	var totalWritten int64
 	return totalWritten, o.StreamBytes(func(line []byte) error {
-		n, err := dst.Write(line)
+		n, err := dst.Write(append(line, '\n'))
 		totalWritten += int64(n)
 		return err
 	})
