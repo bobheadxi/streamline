@@ -1,0 +1,228 @@
+[
+  {
+    "Version": "5c1752acb64ac6a74971774d040bf40df6bdb796",
+    "Date": 1673752891,
+    "Tags": [
+      "ref=refs/heads/main"
+    ],
+    "Suites": [
+      {
+        "Goos": "linux",
+        "Goarch": "amd64",
+        "Pkg": "go.bobheadxi.dev/streamline/benchmarks",
+        "Benchmarks": [
+          {
+            "Name": "BenchmarkBufioReader/0-2",
+            "Runs": 1285468,
+            "NsPerOp": 940.3,
+            "Mem": {
+              "BytesPerOp": 4096,
+              "AllocsPerOp": 1,
+              "MBPerSec": 0
+            }
+          },
+          {
+            "Name": "BenchmarkBufioReader/1-2",
+            "Runs": 1287304,
+            "NsPerOp": 1024,
+            "Mem": {
+              "BytesPerOp": 4096,
+              "AllocsPerOp": 1,
+              "MBPerSec": 0
+            }
+          },
+          {
+            "Name": "BenchmarkBufioReader/8-2",
+            "Runs": 1300951,
+            "NsPerOp": 928.5,
+            "Mem": {
+              "BytesPerOp": 4096,
+              "AllocsPerOp": 1,
+              "MBPerSec": 0
+            }
+          },
+          {
+            "Name": "BenchmarkBufioReader/100-2",
+            "Runs": 1292904,
+            "NsPerOp": 931.6,
+            "Mem": {
+              "BytesPerOp": 4096,
+              "AllocsPerOp": 1,
+              "MBPerSec": 0
+            }
+          },
+          {
+            "Name": "BenchmarkBufioReader/1000-2",
+            "Runs": 1227284,
+            "NsPerOp": 943.8,
+            "Mem": {
+              "BytesPerOp": 4096,
+              "AllocsPerOp": 1,
+              "MBPerSec": 0
+            }
+          },
+          {
+            "Name": "BenchmarkBufioReader/10000-2",
+            "Runs": 1000000,
+            "NsPerOp": 1170,
+            "Mem": {
+              "BytesPerOp": 4096,
+              "AllocsPerOp": 1,
+              "MBPerSec": 0
+            }
+          },
+          {
+            "Name": "BenchmarkBufioReader/100000-2",
+            "Runs": 1923520,
+            "NsPerOp": 602.7,
+            "Mem": {
+              "BytesPerOp": 4096,
+              "AllocsPerOp": 1,
+              "MBPerSec": 0
+            }
+          },
+          {
+            "Name": "BenchmarkStreamBytes/0-2",
+            "Runs": 1264579,
+            "NsPerOp": 949.9,
+            "Mem": {
+              "BytesPerOp": 4096,
+              "AllocsPerOp": 1,
+              "MBPerSec": 0
+            }
+          },
+          {
+            "Name": "BenchmarkStreamBytes/1-2",
+            "Runs": 1278300,
+            "NsPerOp": 952.6,
+            "Mem": {
+              "BytesPerOp": 4096,
+              "AllocsPerOp": 1,
+              "MBPerSec": 0
+            }
+          },
+          {
+            "Name": "BenchmarkStreamBytes/8-2",
+            "Runs": 1000000,
+            "NsPerOp": 1000,
+            "Mem": {
+              "BytesPerOp": 4096,
+              "AllocsPerOp": 1,
+              "MBPerSec": 0
+            }
+          },
+          {
+            "Name": "BenchmarkStreamBytes/100-2",
+            "Runs": 1279411,
+            "NsPerOp": 929.2,
+            "Mem": {
+              "BytesPerOp": 4096,
+              "AllocsPerOp": 1,
+              "MBPerSec": 0
+            }
+          },
+          {
+            "Name": "BenchmarkStreamBytes/1000-2",
+            "Runs": 1239951,
+            "NsPerOp": 937.8,
+            "Mem": {
+              "BytesPerOp": 4096,
+              "AllocsPerOp": 1,
+              "MBPerSec": 0
+            }
+          },
+          {
+            "Name": "BenchmarkStreamBytes/10000-2",
+            "Runs": 913698,
+            "NsPerOp": 1155,
+            "Mem": {
+              "BytesPerOp": 4096,
+              "AllocsPerOp": 1,
+              "MBPerSec": 0
+            }
+          },
+          {
+            "Name": "BenchmarkStreamBytes/100000-2",
+            "Runs": 1843315,
+            "NsPerOp": 688.1,
+            "Mem": {
+              "BytesPerOp": 4096,
+              "AllocsPerOp": 1,
+              "MBPerSec": 0
+            }
+          },
+          {
+            "Name": "BenchmarkStreamBytesWithPipeline/0-2",
+            "Runs": 1000000,
+            "NsPerOp": 1041,
+            "Mem": {
+              "BytesPerOp": 4232,
+              "AllocsPerOp": 4,
+              "MBPerSec": 0
+            }
+          },
+          {
+            "Name": "BenchmarkStreamBytesWithPipeline/1-2",
+            "Runs": 1000000,
+            "NsPerOp": 1031,
+            "Mem": {
+              "BytesPerOp": 4232,
+              "AllocsPerOp": 4,
+              "MBPerSec": 0
+            }
+          },
+          {
+            "Name": "BenchmarkStreamBytesWithPipeline/8-2",
+            "Runs": 1000000,
+            "NsPerOp": 1045,
+            "Mem": {
+              "BytesPerOp": 4232,
+              "AllocsPerOp": 4,
+              "MBPerSec": 0
+            }
+          },
+          {
+            "Name": "BenchmarkStreamBytesWithPipeline/100-2",
+            "Runs": 1000000,
+            "NsPerOp": 1030,
+            "Mem": {
+              "BytesPerOp": 4232,
+              "AllocsPerOp": 4,
+              "MBPerSec": 0
+            }
+          },
+          {
+            "Name": "BenchmarkStreamBytesWithPipeline/1000-2",
+            "Runs": 985802,
+            "NsPerOp": 1051,
+            "Mem": {
+              "BytesPerOp": 4232,
+              "AllocsPerOp": 4,
+              "MBPerSec": 0
+            }
+          },
+          {
+            "Name": "BenchmarkStreamBytesWithPipeline/10000-2",
+            "Runs": 1000000,
+            "NsPerOp": 1237,
+            "Mem": {
+              "BytesPerOp": 4232,
+              "AllocsPerOp": 4,
+              "MBPerSec": 0
+            }
+          },
+          {
+            "Name": "BenchmarkStreamBytesWithPipeline/100000-2",
+            "Runs": 1595822,
+            "NsPerOp": 721.8,
+            "Mem": {
+              "BytesPerOp": 4232,
+              "AllocsPerOp": 4,
+              "MBPerSec": 0
+            }
+          }
+        ]
+      }
+    ]
+  }
+]
