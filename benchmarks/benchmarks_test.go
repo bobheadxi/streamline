@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"errors"
 	"io"
-	"strconv"
 	"strings"
 	"testing"
 
@@ -20,55 +19,48 @@ var testData = []string{
 	"Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
 }
 
-func generateInput(lines int) io.Reader {
-	inputLines := make([]string, lines)
-	for l := 0; l < lines; l++ {
+const inputLineCount = 100000
+
+func generateInput() io.Reader {
+	inputLines := make([]string, inputLineCount)
+	for l := 0; l < inputLineCount; l++ {
 		inputLines[l] = testData[l%len(testData)]
 	}
 	return strings.NewReader(strings.Join(inputLines, "\n"))
 }
 
 func BenchmarkBufioReader(b *testing.B) {
-	for _, lines := range []int{0, 1, 8, 100, 1000, 10000, 100000} {
-		input := generateInput(lines)
-		b.Run(strconv.Itoa(lines), func(b *testing.B) {
-			for i := 0; i < b.N; i++ {
-				r := bufio.NewReader(input)
-				for {
-					_, err := r.ReadBytes('\n')
-					if errors.Is(err, io.EOF) {
-						break
-					}
-					assert.NoError(b, err)
-				}
+	input := generateInput()
+
+	for i := 0; i < b.N; i++ {
+		r := bufio.NewReader(input)
+		for {
+			_, err := r.ReadBytes('\n')
+			if errors.Is(err, io.EOF) {
+				break
 			}
-		})
+			assert.NoError(b, err)
+		}
 	}
 }
 
 func BenchmarkStreamBytes(b *testing.B) {
-	for _, lines := range []int{0, 1, 8, 100, 1000, 10000, 100000} {
-		input := generateInput(lines)
-		b.Run(strconv.Itoa(lines), func(b *testing.B) {
-			for i := 0; i < b.N; i++ {
-				s := streamline.New(input)
-				err := s.StreamBytes(func(_ []byte) error { return nil })
-				assert.NoError(b, err)
-			}
-		})
+	input := generateInput()
+
+	for i := 0; i < b.N; i++ {
+		s := streamline.New(input)
+		err := s.StreamBytes(func(_ []byte) error { return nil })
+		assert.NoError(b, err)
 	}
 }
 
 func BenchmarkStreamBytesWithPipeline(b *testing.B) {
-	for _, lines := range []int{0, 1, 8, 100, 1000, 10000, 100000} {
-		input := generateInput(lines)
-		b.Run(strconv.Itoa(lines), func(b *testing.B) {
-			for i := 0; i < b.N; i++ {
-				s := streamline.New(input).
-					WithPipeline(pipeline.Map(func(line []byte) []byte { return line }))
-				err := s.StreamBytes(func(_ []byte) error { return nil })
-				assert.NoError(b, err)
-			}
-		})
+	input := generateInput()
+
+	for i := 0; i < b.N; i++ {
+		s := streamline.New(input).
+			WithPipeline(pipeline.Map(func(line []byte) []byte { return line }))
+		err := s.StreamBytes(func(_ []byte) error { return nil })
+		assert.NoError(b, err)
 	}
 }
