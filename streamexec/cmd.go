@@ -1,7 +1,10 @@
 package streamexec
 
 import (
+	"fmt"
+	"io"
 	"os/exec"
+	"strings"
 
 	"go.bobheadxi.dev/streamline"
 	"go.bobheadxi.dev/streamline/pipe"
@@ -19,6 +22,10 @@ const (
 	Stdout StreamMode = 1 << iota
 	// Stderr only streams cmd.Stderr.
 	Stderr
+
+	// ErrorWithStderr collects Stderr output and includes it in the returned error from
+	// Cmd.Start(). Best used with the Stdout StreamMode.
+	ErrorWithStderr
 )
 
 // Cmd is a command with a streamline.Stream attached to it.
@@ -26,6 +33,9 @@ type Cmd struct {
 	cmd          *exec.Cmd
 	stream       *streamline.Stream
 	streamWriter pipe.WriterErrorCloser
+
+	// stderr is set and populated on the StderrInError StreamMode.
+	stderr *strings.Builder
 }
 
 // Run attaches a streamline.Stream to the command, returning a wrapped Cmd that can be
@@ -42,10 +52,22 @@ func Attach(cmd *exec.Cmd, mode StreamMode) *Cmd {
 		cmd.Stderr = streamWriter
 	}
 
+	var stderr *strings.Builder
+	if mode&ErrorWithStderr != 0 {
+		stderr = &strings.Builder{}
+		if cmd.Stderr == nil {
+			cmd.Stderr = stderr
+		} else {
+			cmd.Stderr = io.MultiWriter(cmd.Stderr, stderr)
+		}
+	}
+
 	return &Cmd{
 		cmd:          cmd,
 		stream:       stream,
 		streamWriter: streamWriter,
+
+		stderr: stderr,
 	}
 }
 
@@ -67,6 +89,9 @@ func (c *Cmd) Start() (*streamline.Stream, error) {
 
 	go func() {
 		err := c.cmd.Wait()
+		if err != nil && c.stderr != nil && c.stderr.Len() > 0 {
+			err = fmt.Errorf("%w: %s", err, strings.TrimSuffix(c.stderr.String(), "\n"))
+		}
 		c.streamWriter.CloseWithError(err)
 	}()
 

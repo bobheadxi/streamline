@@ -100,10 +100,7 @@ func (o *Stream) String() (string, error) {
 	var sb strings.Builder
 	_, err := io.Copy(&sb, o) // use Stream implementation of io
 	data := strings.TrimSuffix(sb.String(), "\n")
-	if err != nil {
-		return data, err
-	}
-	return data, nil
+	return data, err
 }
 
 // Bytes collects all processed output as a bytes slice.
@@ -114,10 +111,7 @@ func (o *Stream) Bytes() ([]byte, error) {
 	var b bytes.Buffer
 	_, err := io.Copy(&b, o) // use Stream implementation of io
 	data := bytes.TrimSuffix(b.Bytes(), []byte{'\n'})
-	if err != nil {
-		return data, err
-	}
-	return data, nil
+	return data, err
 }
 
 var _ io.WriterTo = (*Stream)(nil)
