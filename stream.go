@@ -23,7 +23,7 @@ type Stream struct {
 	reader *bufio.Reader
 
 	// pipeline, if active, must be used to pre-process lines.
-	pipeline *safePipeline
+	pipeline pipeline.MultiPipeline
 
 	// readBuffer is set by incremental consumers like Read to store.
 	readBuffer *bytes.Buffer
@@ -35,9 +35,10 @@ func New(input io.Reader) *Stream { return &Stream{reader: bufio.NewReader(input
 // WithPipeline configures this Stream to process the input data with the given Pipeline
 // in all output methods ((*Stream).Stream(...), (*Stream).Lines(...), io.Copy, etc.).
 //
-// If you want to use multiple Pipelines, you can provide a pipeline.MultiPipeline.
+// If one or more Pipelines are already configured on this Stream, the given Pipeline
+// is applied sequentially after the preconfigured pipelines.
 func (s *Stream) WithPipeline(p pipeline.Pipeline) *Stream {
-	s.pipeline = &safePipeline{p}
+	s.pipeline = append(s.pipeline, p)
 	return s
 }
 
