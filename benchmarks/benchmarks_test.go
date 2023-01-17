@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"errors"
 	"io"
-	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -12,27 +11,12 @@ import (
 	"go.bobheadxi.dev/streamline/pipeline"
 )
 
-var testData = []string{
-	"Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
-	"Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.",
-	"Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.",
-	"Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
-}
-
-const inputLineCount = 100000
-
-func generateInput() io.Reader {
-	inputLines := make([]string, inputLineCount)
-	for l := 0; l < inputLineCount; l++ {
-		inputLines[l] = testData[l%len(testData)]
-	}
-	return strings.NewReader(strings.Join(inputLines, "\n"))
-}
-
 func BenchmarkBufioReader(b *testing.B) {
-	input := generateInput()
+	input, reset := generateInput()
 
 	for i := 0; i < b.N; i++ {
+		reset()
+
 		r := bufio.NewReader(input)
 		for {
 			_, err := r.ReadBytes('\n')
@@ -45,9 +29,11 @@ func BenchmarkBufioReader(b *testing.B) {
 }
 
 func BenchmarkStreamBytes(b *testing.B) {
-	input := generateInput()
+	input, reset := generateInput()
 
 	for i := 0; i < b.N; i++ {
+		reset()
+
 		s := streamline.New(input)
 		err := s.StreamBytes(func(_ []byte) error { return nil })
 		assert.NoError(b, err)
@@ -55,9 +41,11 @@ func BenchmarkStreamBytes(b *testing.B) {
 }
 
 func BenchmarkStreamBytesWithPipeline(b *testing.B) {
-	input := generateInput()
+	input, reset := generateInput()
 
 	for i := 0; i < b.N; i++ {
+		reset()
+
 		s := streamline.New(input).
 			WithPipeline(pipeline.Map(func(line []byte) []byte { return line }))
 		err := s.StreamBytes(func(_ []byte) error { return nil })
@@ -66,9 +54,11 @@ func BenchmarkStreamBytesWithPipeline(b *testing.B) {
 }
 
 func BenchmarkStreamLines(b *testing.B) {
-	input := generateInput()
+	input, reset := generateInput()
 
 	for i := 0; i < b.N; i++ {
+		reset()
+
 		s := streamline.New(input)
 		_, err := s.Lines()
 		assert.NoError(b, err)
@@ -76,9 +66,11 @@ func BenchmarkStreamLines(b *testing.B) {
 }
 
 func BenchmarkStreamLinesWithPipeline(b *testing.B) {
-	input := generateInput()
+	input, reset := generateInput()
 
 	for i := 0; i < b.N; i++ {
+		reset()
+
 		s := streamline.New(input).
 			WithPipeline(pipeline.Map(func(line []byte) []byte { return line }))
 		_, err := s.Lines()
@@ -87,18 +79,22 @@ func BenchmarkStreamLinesWithPipeline(b *testing.B) {
 }
 
 func BenchmarkIoReadAll(b *testing.B) {
-	input := generateInput()
+	input, reset := generateInput()
 
 	for i := 0; i < b.N; i++ {
+		reset()
+
 		_, err := io.ReadAll(input)
 		assert.NoError(b, err)
 	}
 }
 
 func BenchmarkStreamReadAll(b *testing.B) {
-	input := generateInput()
+	input, reset := generateInput()
 
 	for i := 0; i < b.N; i++ {
+		reset()
+
 		s := streamline.New(input)
 		_, err := io.ReadAll(s)
 		assert.NoError(b, err)
@@ -106,11 +102,11 @@ func BenchmarkStreamReadAll(b *testing.B) {
 }
 
 func BenchmarkStreamReadAllWithPipeline(b *testing.B) {
-	b.Skip("StreamReadAllWithPipeline is so inefficient that this benchmark can cause a timeout - see TODO on Stream.Read")
-
-	input := generateInput()
+	input, reset := generateInput()
 
 	for i := 0; i < b.N; i++ {
+		reset()
+
 		s := streamline.New(input).
 			WithPipeline(pipeline.Map(func(line []byte) []byte { return line }))
 		_, err := io.ReadAll(s)
