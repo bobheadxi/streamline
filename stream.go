@@ -124,10 +124,6 @@ var _ io.Reader = (*Stream)(nil)
 
 // Read populates p with processed data. It allows Stream to effectively be compatible
 // with anything that accepts an io.Reader.
-//
-// WARNING: This implementation is currently VERY inefficient with Pipeline configured.
-// Prefer to avoid calling Read() by calling WriteTo() instead, e.g. via io.Copy instead
-// of io.ReadAll.
 func (o *Stream) Read(p []byte) (int, error) {
 	if o.pipeline.Inactive() {
 		// Happy path, do a straight read
@@ -154,17 +150,20 @@ func (o *Stream) Read(p []byte) (int, error) {
 	for {
 		skipped, err = o.readLine(func(line []byte) error {
 			line = append(line, '\n')
-			if len(line) < cap(p) {
+			if len(line) <= cap(p) {
+				// If we have less data than is requested, just copy into p
 				read = copy(p, line)
 			} else {
-				// If we are using readLine, then the buffer has been consumed.
+				// If we are using readLine, then the buffer has been consumed,
+				// we reset and populate it with our data and give p a partial
+				// read.
 				o.readBuffer.Reset()
 				_, _ = o.readBuffer.Write(line)
 				read, _ = o.readBuffer.Read(p)
 			}
 			return nil
 		})
-		if !skipped {
+		if !skipped || err != nil {
 			break
 		}
 	}
@@ -187,6 +186,8 @@ func (o *Stream) readLine(handle LineHandler[[]byte]) (skipped bool, err error) 
 		return true, readErr
 	}
 
+	// If the line ends with a newline, trim it before handing it off to the
+	// LineHandler.
 	if line[len(line)-1] == '\n' {
 		line = line[:len(line)-1]
 	}

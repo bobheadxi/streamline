@@ -183,5 +183,10 @@ func TestStreamReader(t *testing.T) {
 		all, err := io.ReadAll(stream)
 		assert.NoError(t, err)
 		autogold.Want("WithPipeline.Read: all remaining", "baz-bar\nhello-world\n").Equal(t, string(all))
+
+		// We correctly do not stall on an empty input.
+		all, err = io.ReadAll(stream)
+		assert.Zero(t, len(all))
+		assert.NoError(t, err)
 	})
 }
