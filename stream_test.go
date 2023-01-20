@@ -112,6 +112,18 @@ func TestStreamWithPipeline(t *testing.T) {
 			},
 			want: autogold.Want("WithPipeline Copy", "foo-bar-baz\nbaz-bar\nhello-world\n"),
 		},
+		{
+			generate: func(s *streamline.Stream) (any, error) {
+				s = s.WithPipeline(pipeline.Map(func(line []byte) []byte {
+					return bytes.ReplaceAll(line, []byte("bar"), []byte("robert"))
+				}))
+
+				var sb strings.Builder
+				_, err := io.Copy(&sb, s)
+				return sb.String(), err
+			},
+			want: autogold.Want("WithPipeline multiple", "foo-robert-baz\nbaz-robert\nhello-world\n"),
+		},
 	} {
 		t.Run(tc.want.Name(), func(t *testing.T) {
 			got, err := tc.generate(newStream())
@@ -189,4 +201,31 @@ func TestStreamReader(t *testing.T) {
 		assert.Zero(t, len(all))
 		assert.NoError(t, err)
 	})
+}
+
+func TestStreamWithLineSeparator(t *testing.T) {
+	data := "Compressing objects:   0% (1/4334)\rCompressing objects:   1% (44/4334)\rCompressing objects:   2% (87/4334)\rCompressing objects:   3% (131/4334)\rCompressing objects:   4% (174/4334)\rCompressing objects:   5% (217/4334)\rCompressing objects:   6% (261/4334)\rCompressing objects:   7% (304/4334)\rCompressing objects:   8% (347/4334)\rCompressing objects:   9% (391/4334)\rCompressing objects:  10% (434/4334)\rCompressing objects:  11% (477/4334)\rCompressing objects:  12% (521/4334)\rCompressing objects:  13% (564/4334)\rCompressing objects:  14% (607/4334)\rCompressing objects:  15% (651/4334)\rCompressing objects:  16% (694/4334)\rCompressing objects:  17% (737/4334)"
+	stream := streamline.New(strings.NewReader(data)).WithLineSeparator('\r')
+
+	lines, err := stream.Lines()
+	require.NoError(t, err)
+	autogold.Want("custom line separator splits on lines", []string{
+		"Compressing objects:   0% (1/4334)", "Compressing objects:   1% (44/4334)",
+		"Compressing objects:   2% (87/4334)",
+		"Compressing objects:   3% (131/4334)",
+		"Compressing objects:   4% (174/4334)",
+		"Compressing objects:   5% (217/4334)",
+		"Compressing objects:   6% (261/4334)",
+		"Compressing objects:   7% (304/4334)",
+		"Compressing objects:   8% (347/4334)",
+		"Compressing objects:   9% (391/4334)",
+		"Compressing objects:  10% (434/4334)",
+		"Compressing objects:  11% (477/4334)",
+		"Compressing objects:  12% (521/4334)",
+		"Compressing objects:  13% (564/4334)",
+		"Compressing objects:  14% (607/4334)",
+		"Compressing objects:  15% (651/4334)",
+		"Compressing objects:  16% (694/4334)",
+		"Compressing objects:  17% (737/4334)",
+	}).Equal(t, lines)
 }

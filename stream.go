@@ -27,10 +27,18 @@ type Stream struct {
 
 	// readBuffer is set by incremental consumers like Read to store.
 	readBuffer *bytes.Buffer
+
+	// lineSeparator is used as the read delimiter.
+	lineSeparator byte
 }
 
 // New creates a Stream that consumes, processes, and emits data from the input.
-func New(input io.Reader) *Stream { return &Stream{reader: bufio.NewReader(input)} }
+func New(input io.Reader) *Stream {
+	return &Stream{
+		reader:        bufio.NewReader(input),
+		lineSeparator: '\n',
+	}
+}
 
 // WithPipeline configures this Stream to process the input data with the given Pipeline
 // in all output methods ((*Stream).Stream(...), (*Stream).Lines(...), io.Copy, etc.).
@@ -42,23 +50,29 @@ func (s *Stream) WithPipeline(p pipeline.Pipeline) *Stream {
 	return s
 }
 
+// WithLineSeparator configures a custom line separator for this stream. The default is '\n'.
+func (s *Stream) WithLineSeparator(seperator byte) *Stream {
+	s.lineSeparator = seperator
+	return s
+}
+
 type LineHandler[T string | []byte] func(line T) error
 
 // Stream passes lines read from the input to the handler as it processes them.
 //
 // This method will block until the input returns an error. Unless the error is io.EOF,
 // it will also propagate the error.
-func (o *Stream) Stream(dst LineHandler[string]) error {
-	return o.StreamBytes(func(line []byte) error { return dst(string(line)) })
+func (s *Stream) Stream(dst LineHandler[string]) error {
+	return s.StreamBytes(func(line []byte) error { return dst(string(line)) })
 }
 
 // StreamBytes passes lines read from the input to the handler as it processes them.
 //
 // This method will block until the input returns an error. Unless the error is io.EOF,
 // it will also propagate the error.
-func (o *Stream) StreamBytes(dst LineHandler[[]byte]) error {
+func (s *Stream) StreamBytes(dst LineHandler[[]byte]) error {
 	for {
-		_, err := o.readLine(dst)
+		_, err := s.readLine(dst)
 		if err != nil {
 			if errors.Is(err, io.EOF) {
 				return nil
@@ -72,9 +86,9 @@ func (o *Stream) StreamBytes(dst LineHandler[[]byte]) error {
 //
 // This method will block until the input returns an error. Unless the error is io.EOF,
 // it will also propagate the error.
-func (o *Stream) Lines() ([]string, error) {
+func (s *Stream) Lines() ([]string, error) {
 	lines := make([]string, 0, 10)
-	return lines, o.Stream(func(line string) error {
+	return lines, s.Stream(func(line string) error {
 		lines = append(lines, line)
 		return nil
 	})
@@ -84,9 +98,9 @@ func (o *Stream) Lines() ([]string, error) {
 //
 // This method will block until the input returns an error. Unless the error is io.EOF,
 // it will also propagate the error.
-func (o *Stream) String() (string, error) {
+func (s *Stream) String() (string, error) {
 	var sb strings.Builder
-	_, err := io.Copy(&sb, o) // use Stream implementation of io
+	_, err := s.WriteTo(&sb) // use Stream implementation of io
 	data := strings.TrimSuffix(sb.String(), "\n")
 	return data, err
 }
@@ -95,10 +109,10 @@ func (o *Stream) String() (string, error) {
 //
 // This method will block until the input returns an error. Unless the error is io.EOF,
 // it will also propagate the error.
-func (o *Stream) Bytes() ([]byte, error) {
+func (s *Stream) Bytes() ([]byte, error) {
 	var b bytes.Buffer
-	_, err := io.Copy(&b, o) // use Stream implementation of io
-	data := bytes.TrimSuffix(b.Bytes(), []byte{'\n'})
+	_, err := s.WriteTo(&b)
+	data := bytes.TrimSuffix(b.Bytes(), []byte{s.lineSeparator})
 	return data, err
 }
 
@@ -106,14 +120,14 @@ var _ io.WriterTo = (*Stream)(nil)
 
 // WriteTo writes processed data to dst. It allows Stream to effectively implement io.Copy
 // handling.
-func (o *Stream) WriteTo(dst io.Writer) (int64, error) {
-	if o.pipeline.Inactive() {
+func (s *Stream) WriteTo(dst io.Writer) (int64, error) {
+	if s.pipeline.Inactive() {
 		// Happy path, do a straight read from the underlying source
-		return io.Copy(dst, o.reader)
+		return s.reader.WriteTo(dst)
 	}
 
 	var totalWritten int64
-	return totalWritten, o.StreamBytes(func(line []byte) error {
+	return totalWritten, s.StreamBytes(func(line []byte) error {
 		n, err := dst.Write(append(line, '\n'))
 		totalWritten += int64(n)
 		return err
@@ -124,17 +138,17 @@ var _ io.Reader = (*Stream)(nil)
 
 // Read populates p with processed data. It allows Stream to effectively be compatible
 // with anything that accepts an io.Reader.
-func (o *Stream) Read(p []byte) (int, error) {
-	if o.pipeline.Inactive() {
+func (s *Stream) Read(p []byte) (int, error) {
+	if s.pipeline.Inactive() {
 		// Happy path, do a straight read
-		return o.reader.Read(p)
+		return s.reader.Read(p)
 	}
 
-	if o.readBuffer == nil {
-		o.readBuffer = &bytes.Buffer{}
+	if s.readBuffer == nil {
+		s.readBuffer = &bytes.Buffer{}
 	}
-	if o.readBuffer.Len() > 0 {
-		read, _ := o.readBuffer.Read(p)
+	if s.readBuffer.Len() > 0 {
+		read, _ := s.readBuffer.Read(p)
 		return read, nil
 	}
 
@@ -148,8 +162,8 @@ func (o *Stream) Read(p []byte) (int, error) {
 		err     error
 	)
 	for {
-		skipped, err = o.readLine(func(line []byte) error {
-			line = append(line, '\n')
+		skipped, err = s.readLine(func(line []byte) error {
+			line = append(line, s.lineSeparator)
 			if len(line) <= cap(p) {
 				// If we have less data than is requested, just copy into p
 				read = copy(p, line)
@@ -157,9 +171,9 @@ func (o *Stream) Read(p []byte) (int, error) {
 				// If we are using readLine, then the buffer has been consumed,
 				// we reset and populate it with our data and give p a partial
 				// read.
-				o.readBuffer.Reset()
-				_, _ = o.readBuffer.Write(line)
-				read, _ = o.readBuffer.Read(p)
+				s.readBuffer.Reset()
+				_, _ = s.readBuffer.Write(line)
+				read, _ = s.readBuffer.Read(p)
 			}
 			return nil
 		})
@@ -179,8 +193,8 @@ func (o *Stream) Read(p []byte) (int, error) {
 //
 // The read error in particular may be io.EOF, which the caller should handle on a
 // case-by-case basis.
-func (o *Stream) readLine(handle LineHandler[[]byte]) (skipped bool, err error) {
-	line, readErr := o.reader.ReadBytes('\n')
+func (s *Stream) readLine(handle LineHandler[[]byte]) (skipped bool, err error) {
+	line, readErr := s.reader.ReadBytes(s.lineSeparator)
 
 	if len(line) == 0 {
 		return true, readErr
@@ -188,12 +202,12 @@ func (o *Stream) readLine(handle LineHandler[[]byte]) (skipped bool, err error) 
 
 	// If the line ends with a newline, trim it before handing it off to the
 	// LineHandler.
-	if line[len(line)-1] == '\n' {
+	if line[len(line)-1] == s.lineSeparator {
 		line = line[:len(line)-1]
 	}
 
 	var processErr error
-	if line, processErr = o.pipeline.ProcessLine(line); processErr != nil {
+	if line, processErr = s.pipeline.ProcessLine(line); processErr != nil {
 		return false, processErr
 	}
 
