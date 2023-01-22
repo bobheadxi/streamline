@@ -10,6 +10,15 @@ import (
 	"go.bobheadxi.dev/streamline/pipeline"
 )
 
+// LineReader is a reader that implements the ability to read up to a line
+// delimiter.
+type LineReader interface {
+	ReadBytes(delim byte) ([]byte, error)
+
+	io.WriterTo
+	io.Reader
+}
+
 // Stream enables live, line-by-line manipulation and handling of data through
 // (*Stream).WithPipeline(...) and Stream's various aggregation methods. Stream also
 // supports standard library features like io.Copy and io.ReadAll.
@@ -20,7 +29,7 @@ import (
 // methods.
 type Stream struct {
 	// reader carries the input data and the current read state.
-	reader *bufio.Reader
+	reader LineReader
 
 	// pipeline, if active, must be used to pre-process lines.
 	pipeline pipeline.MultiPipeline
@@ -32,10 +41,18 @@ type Stream struct {
 	lineSeparator byte
 }
 
-// New creates a Stream that consumes, processes, and emits data from the input.
+// New creates a Stream that consumes, processes, and emits data from the input. If the
+// input also implements LineReader, then it will use the input directly - otherwise, it
+// will wrap the input in a bufio.Reader.
 func New(input io.Reader) *Stream {
+	var reader LineReader
+	if lr, ok := input.(LineReader); ok {
+		reader = lr
+	} else {
+		reader = bufio.NewReader(input)
+	}
 	return &Stream{
-		reader:        bufio.NewReader(input),
+		reader:        reader,
 		lineSeparator: '\n',
 	}
 }
