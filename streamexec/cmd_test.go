@@ -28,7 +28,7 @@ and another line!`).Equal(t, out)
 		cmd := exec.Command("echo", "hello world\nthis is a line\nand another line!")
 		stream, err := streamexec.Attach(cmd, streamexec.Combined).
 			WithPipeline(pipeline.Filter(func(line []byte) bool {
-				return bytes.Contains(line, []byte("hello"))
+				return !bytes.Contains(line, []byte("hello"))
 			})).
 			Start()
 		require.NoError(t, err)
@@ -36,8 +36,7 @@ and another line!`).Equal(t, out)
 		out, err := stream.String()
 		require.NoError(t, err)
 
-		autogold.Want("run output with pipeline", `this is a line
-	and another line!`).Equal(t, out)
+		autogold.Want("run output with pipeline", "this is a line\nand another line!").Equal(t, out)
 	})
 }
 
