@@ -35,7 +35,7 @@ func ExampleStream_WithPipeline() {
 func Example_streamexec_Attach() {
 	cmd := exec.Command("echo", "hello world\nthis is a line\nand another line!")
 
-	stream, _ := streamexec.Attach(cmd, streamexec.Combined).Start()
+	stream, _ := streamexec.Start(cmd, streamexec.Combined)
 	_ = stream.Stream(func(line string) error {
 		if !strings.Contains(line, "hello") {
 			fmt.Println("received output:", line)

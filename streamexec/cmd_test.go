@@ -14,7 +14,7 @@ import (
 
 func TestRun(t *testing.T) {
 	cmd := exec.Command("echo", "hello world\nthis is a line\nand another line!")
-	stream, err := streamexec.Attach(cmd, streamexec.Combined).Start()
+	stream, err := streamexec.Start(cmd, streamexec.Combined)
 	require.NoError(t, err)
 
 	out, err := stream.String()
@@ -26,14 +26,14 @@ and another line!`).Equal(t, out)
 
 	t.Run("WithPipeline", func(t *testing.T) {
 		cmd := exec.Command("echo", "hello world\nthis is a line\nand another line!")
-		stream, err := streamexec.Attach(cmd, streamexec.Combined).
+		stream, err := streamexec.Start(cmd, streamexec.Combined)
+		require.NoError(t, err)
+
+		out, err := stream.
 			WithPipeline(pipeline.Filter(func(line []byte) bool {
 				return !bytes.Contains(line, []byte("hello"))
 			})).
-			Start()
-		require.NoError(t, err)
-
-		out, err := stream.String()
+			String()
 		require.NoError(t, err)
 
 		autogold.Want("run output with pipeline", "this is a line\nand another line!").Equal(t, out)
@@ -44,7 +44,7 @@ func TestError(t *testing.T) {
 	t.Run("simple", func(t *testing.T) {
 		cmd := exec.Command("bash", "-o", "pipefail", "-o", "errexit", "-c",
 			`echo "stdout" ; sleep 0.001 ; >&2 echo "stderr" ; exit 1`)
-		stream, err := streamexec.Attach(cmd, streamexec.Stdout|streamexec.ErrWithStderr).Start()
+		stream, err := streamexec.Start(cmd, streamexec.Stdout|streamexec.ErrWithStderr)
 		require.NoError(t, err)
 
 		out, err := stream.String()
@@ -57,7 +57,7 @@ func TestError(t *testing.T) {
 			`echo "stdout" ; sleep 0.001 ; >&2 echo "stderr" ; exit 1`)
 		var errBuf bytes.Buffer
 		cmd.Stderr = &errBuf
-		stream, err := streamexec.Attach(cmd, streamexec.Stdout|streamexec.ErrWithStderr).Start()
+		stream, err := streamexec.Start(cmd, streamexec.Stdout|streamexec.ErrWithStderr)
 		require.NoError(t, err)
 
 		_, err = stream.String()
