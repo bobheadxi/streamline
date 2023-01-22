@@ -206,9 +206,9 @@ func (s *Stream) Read(p []byte) (int, error) {
 // readLine consumes a single line in the stream. The error returned, in order of
 // precedence, is one of:
 //
-// - processing error
-// - handler error
-// - read error
+//   - processing error
+//   - handler error
+//   - read error
 //
 // The read error in particular may be io.EOF, which the caller should handle on a
 // case-by-case basis.
