@@ -101,7 +101,7 @@ func (s *Stream) Lines() ([]string, error) {
 func (s *Stream) String() (string, error) {
 	var sb strings.Builder
 	_, err := s.WriteTo(&sb) // use Stream implementation of io
-	data := strings.TrimSuffix(sb.String(), "\n")
+	data := strings.TrimSuffix(sb.String(), string(s.lineSeparator))
 	return data, err
 }
 
@@ -128,7 +128,7 @@ func (s *Stream) WriteTo(dst io.Writer) (int64, error) {
 
 	var totalWritten int64
 	return totalWritten, s.StreamBytes(func(line []byte) error {
-		n, err := dst.Write(append(line, '\n'))
+		n, err := dst.Write(append(line, s.lineSeparator))
 		totalWritten += int64(n)
 		return err
 	})
