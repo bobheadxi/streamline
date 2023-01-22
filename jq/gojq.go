@@ -2,9 +2,9 @@ package jq
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
-	"io"
 
 	"github.com/itchyny/gojq"
 )
@@ -23,14 +23,14 @@ func buildJQ(query string) (*gojq.Code, error) {
 }
 
 // execJQ executes the compiled jq query against content from reader.
-func execJQ(jqCode *gojq.Code, reader io.Reader) ([]byte, error) {
+func execJQ(ctx context.Context, jqCode *gojq.Code, data []byte) ([]byte, error) {
 	var input interface{}
-	if err := json.NewDecoder(reader).Decode(&input); err != nil {
+	if err := json.Unmarshal(data, &input); err != nil {
 		return nil, fmt.Errorf("json: %w", err)
 	}
 
 	var result bytes.Buffer
-	iter := jqCode.Run(input)
+	iter := jqCode.RunWithContext(ctx, input)
 	for {
 		v, ok := iter.Next()
 		if !ok {
