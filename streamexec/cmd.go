@@ -23,9 +23,9 @@ const (
 	// Stderr only streams cmd.Stderr.
 	Stderr
 
-	// ErrorWithStderr collects Stderr output and includes it in the returned error from
+	// ErrWithStderr collects Stderr output and includes it in the returned error from
 	// Cmd.Start(). Best used with the Stdout StreamMode.
-	ErrorWithStderr
+	ErrWithStderr
 )
 
 // Cmd is a command with a streamline.Stream attached to it.
@@ -53,7 +53,7 @@ func Attach(cmd *exec.Cmd, mode StreamMode) *Cmd {
 	}
 
 	var stderr *strings.Builder
-	if mode&ErrorWithStderr != 0 {
+	if mode&ErrWithStderr != 0 {
 		stderr = &strings.Builder{}
 		if cmd.Stderr == nil {
 			cmd.Stderr = stderr
