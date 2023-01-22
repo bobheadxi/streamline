@@ -147,41 +147,60 @@ func (s *Stream) Read(p []byte) (int, error) {
 	if s.readBuffer == nil {
 		s.readBuffer = &bytes.Buffer{}
 	}
+
+	// If we have unread data, read it.
 	if s.readBuffer.Len() > 0 {
-		read, _ := s.readBuffer.Read(p)
-		return read, nil
+		written, _ := s.readBuffer.Read(p)
+		return written, nil
 	}
 
-	// TODO: Going line-by-line may require a lot of calls to Read() in scenarios where
-	// each line is very short. This implementation currently only reads multiple lines
-	// if we a read is a skip - we may want to implement the ability to read again if p
-	// is not filled.
+	// Unread data has been read - we can reset the buffer now.
+	s.readBuffer.Reset()
+
+	// Next, written some lines into the buffer.
 	var (
-		read    int
-		skipped bool
+		written int
+		skipped = false
 		err     error
 	)
 	for {
-		skipped, err = s.readLine(func(line []byte) error {
-			line = append(line, s.lineSeparator)
-			if len(line) <= cap(p) {
-				// If we have less data than is requested, just copy into p
-				read = copy(p, line)
-			} else {
-				// If we are using readLine, then the buffer has been consumed,
-				// we reset and populate it with our data and give p a partial
-				// read.
-				s.readBuffer.Reset()
-				_, _ = s.readBuffer.Write(line)
-				read, _ = s.readBuffer.Read(p)
-			}
+		var currentLine []byte
+		skipped, err = s.readLine(func(next []byte) error {
+			currentLine = append(next, s.lineSeparator)
 			return nil
 		})
-		if !skipped || err != nil {
-			break
+
+		// If this was an empty line, keep reading for more data
+		if skipped && err == nil {
+			continue
 		}
+
+		// Copy byte by byte
+		for read := 0; read < len(currentLine); read++ {
+			// Copy data from current line into p
+			p[written] = currentLine[read]
+			written++
+
+			// p is full, we are done
+			if written == len(p) {
+				// If we weren't done withthe current line, write the rest into
+				// the buffer.
+				if read < len(currentLine) {
+					_, _ = s.readBuffer.Write(currentLine[read+1:])
+				}
+
+				return written, err
+			}
+		}
+
+		// If we hit an error, most likely EOF, we are done
+		if err != nil {
+			return written, err
+		}
+
+		// We were able to copy everything from currentLine into p, and p is not
+		// yet full, and our data is not yet exhausted - continue.
 	}
-	return read, err
 }
 
 // readLine consumes a single line in the stream. The error returned, in order of

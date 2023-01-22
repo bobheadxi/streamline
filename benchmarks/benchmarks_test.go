@@ -8,11 +8,12 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"go.bobheadxi.dev/streamline"
+	"go.bobheadxi.dev/streamline/internal/testdata"
 	"go.bobheadxi.dev/streamline/pipeline"
 )
 
 func BenchmarkBufioReader(b *testing.B) {
-	input, reset := generateInput()
+	input, reset := testdata.GenerateInput()
 
 	for i := 0; i < b.N; i++ {
 		reset()
@@ -29,7 +30,7 @@ func BenchmarkBufioReader(b *testing.B) {
 }
 
 func BenchmarkStreamBytes(b *testing.B) {
-	input, reset := generateInput()
+	input, reset := testdata.GenerateInput()
 
 	for i := 0; i < b.N; i++ {
 		reset()
@@ -41,7 +42,7 @@ func BenchmarkStreamBytes(b *testing.B) {
 }
 
 func BenchmarkStreamBytesWithPipeline(b *testing.B) {
-	input, reset := generateInput()
+	input, reset := testdata.GenerateInput()
 
 	for i := 0; i < b.N; i++ {
 		reset()
@@ -54,7 +55,7 @@ func BenchmarkStreamBytesWithPipeline(b *testing.B) {
 }
 
 func BenchmarkStreamLines(b *testing.B) {
-	input, reset := generateInput()
+	input, reset := testdata.GenerateInput()
 
 	for i := 0; i < b.N; i++ {
 		reset()
@@ -66,7 +67,7 @@ func BenchmarkStreamLines(b *testing.B) {
 }
 
 func BenchmarkStreamLinesWithPipeline(b *testing.B) {
-	input, reset := generateInput()
+	input, reset := testdata.GenerateInput()
 
 	for i := 0; i < b.N; i++ {
 		reset()
@@ -79,7 +80,7 @@ func BenchmarkStreamLinesWithPipeline(b *testing.B) {
 }
 
 func BenchmarkIoReadAll(b *testing.B) {
-	input, reset := generateInput()
+	input, reset := testdata.GenerateInput()
 
 	for i := 0; i < b.N; i++ {
 		reset()
@@ -90,7 +91,7 @@ func BenchmarkIoReadAll(b *testing.B) {
 }
 
 func BenchmarkStreamReadAll(b *testing.B) {
-	input, reset := generateInput()
+	input, reset := testdata.GenerateInput()
 
 	for i := 0; i < b.N; i++ {
 		reset()
@@ -102,7 +103,7 @@ func BenchmarkStreamReadAll(b *testing.B) {
 }
 
 func BenchmarkStreamReadAllWithPipeline(b *testing.B) {
-	input, reset := generateInput()
+	input, reset := testdata.GenerateInput()
 
 	for i := 0; i < b.N; i++ {
 		reset()

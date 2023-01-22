@@ -140,32 +140,29 @@ func TestStreamWithPipeline(t *testing.T) {
 
 func TestStreamReader(t *testing.T) {
 	t.Run("no Pipeline", func(t *testing.T) {
-		stream := streamline.New(strings.NewReader("foo bar baz\nbaz bar\nhello world")).
-			WithPipeline(pipeline.Map(func(line []byte) []byte {
-				return bytes.ReplaceAll(line, []byte{' '}, []byte{'-'})
-			}))
+		stream := streamline.New(strings.NewReader("foo bar baz\nbaz bar\nhello world"))
 
 		p := make([]byte, 5)
 		n, err := stream.Read(p)
 		assert.NoError(t, err)
 		assert.NotZero(t, n)
-		autogold.Want("Read: chunk 1", "foo-b").Equal(t, string(p[:n]))
+		autogold.Want("Read: chunk 1", "foo b").Equal(t, string(p[:n]))
 
 		p = make([]byte, 5)
 		n, err = stream.Read(p)
 		assert.NoError(t, err)
 		assert.NotZero(t, n)
-		autogold.Want("Read: chunk 2", "ar-ba").Equal(t, string(p[:n]))
+		autogold.Want("Read: chunk 2", "ar ba").Equal(t, string(p[:n]))
 
 		p = make([]byte, 5)
 		n, err = stream.Read(p)
 		assert.NoError(t, err)
 		assert.NotZero(t, n)
-		autogold.Want("Read: chunk 3", "z\n").Equal(t, string(p[:n]))
+		autogold.Want("Read: chunk 3", "z\nbaz").Equal(t, string(p[:n]))
 
 		all, err := io.ReadAll(stream)
 		assert.NoError(t, err)
-		autogold.Want("Read: all remaining", "baz-bar\nhello-world\n").Equal(t, string(all))
+		autogold.Want("Read: all remaining", " bar\nhello world").Equal(t, string(all))
 	})
 
 	t.Run("WithPipeline", func(t *testing.T) {
