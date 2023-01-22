@@ -28,3 +28,22 @@ func TestStream(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, size, read.Len()-1) // we append an extra newline
 }
+
+func TestBoundedStream(t *testing.T) {
+	w, s := NewBoundedStream()
+
+	input, size, _ := testdata.GenerateLargeInput(1)
+	go func() {
+		_, err := io.Copy(w, input)
+		require.NoError(t, err)
+		w.CloseWithError(nil)
+	}()
+
+	var read strings.Builder
+	err := s.Stream(func(line string) error {
+		_, err := read.WriteString(line + "\n")
+		return err
+	})
+	assert.NoError(t, err)
+	assert.Equal(t, size, read.Len()-1) // we append an extra newline
+}
