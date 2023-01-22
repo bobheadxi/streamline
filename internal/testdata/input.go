@@ -27,8 +27,8 @@ func GenerateInput() (io.Reader, func()) {
 	return r, func() { r.Seek(0, 0) }
 }
 
-func GenerateLargeInput() (io.Reader, int, func()) {
-	wantCount := inputLineCount * 100
+func GenerateLargeInput(x int) (io.Reader, int, func()) {
+	wantCount := inputLineCount * x
 	inputLines := make([]string, wantCount)
 	for l := 0; l < wantCount; l++ {
 		inputLines[l] = testData[l%len(testData)]

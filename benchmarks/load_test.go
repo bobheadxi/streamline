@@ -19,7 +19,7 @@ func TestStreamReadAll(t *testing.T) {
 		t.Skip("skipping io.ReadAll(*streamline.Stream) load test")
 	}
 
-	input, size, _ := testdata.GenerateLargeInput()
+	input, size, _ := testdata.GenerateLargeInput(100)
 	s := streamline.New(input).
 		WithPipeline(pipeline.Map(func(line []byte) []byte { return line }))
 
