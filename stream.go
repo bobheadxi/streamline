@@ -73,21 +73,25 @@ func (s *Stream) WithLineSeparator(seperator byte) *Stream {
 	return s
 }
 
-type LineHandler[T string | []byte] func(line T) error
-
-// Stream passes lines read from the input to the handler as it processes them.
+// Stream passes lines read from the input to the handler as it processes them. It is
+// intended for simple use cases - to be able to provide errors from the line handler, use
+// StreamBytes instead.
 //
 // This method will block until the input returns an error. Unless the error is io.EOF,
 // it will also propagate the error.
-func (s *Stream) Stream(dst LineHandler[string]) error {
-	return s.StreamBytes(func(line []byte) error { return dst(string(line)) })
+func (s *Stream) Stream(dst func(line string)) error {
+	return s.StreamBytes(func(line []byte) error {
+		dst(string(line))
+		return nil
+	})
 }
 
-// StreamBytes passes lines read from the input to the handler as it processes them.
+// StreamBytes passes lines read from the input to the handler as it processes them, and
+// allows the handler to return an error.
 //
 // This method will block until the input returns an error. Unless the error is io.EOF,
 // it will also propagate the error.
-func (s *Stream) StreamBytes(dst LineHandler[[]byte]) error {
+func (s *Stream) StreamBytes(dst func(line []byte) error) error {
 	for {
 		_, err := s.readLine(dst)
 		if err != nil {
@@ -105,10 +109,7 @@ func (s *Stream) StreamBytes(dst LineHandler[[]byte]) error {
 // it will also propagate the error.
 func (s *Stream) Lines() ([]string, error) {
 	lines := make([]string, 0, 10)
-	return lines, s.Stream(func(line string) error {
-		lines = append(lines, line)
-		return nil
-	})
+	return lines, s.Stream(func(line string) { lines = append(lines, line) })
 }
 
 // String collects all processed output as a string.
@@ -229,7 +230,7 @@ func (s *Stream) Read(p []byte) (int, error) {
 //
 // The read error in particular may be io.EOF, which the caller should handle on a
 // case-by-case basis.
-func (s *Stream) readLine(handle LineHandler[[]byte]) (skipped bool, err error) {
+func (s *Stream) readLine(handle func(line []byte) error) (skipped bool, err error) {
 	line, readErr := s.reader.ReadBytes(s.lineSeparator)
 
 	if len(line) == 0 {

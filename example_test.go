@@ -36,11 +36,10 @@ func Example_streamexec_Attach() {
 	cmd := exec.Command("echo", "hello world\nthis is a line\nand another line!")
 
 	stream, _ := streamexec.Start(cmd, streamexec.Combined)
-	_ = stream.Stream(func(line string) error {
+	_ = stream.Stream(func(line string) {
 		if !strings.Contains(line, "hello") {
 			fmt.Println("received output:", line)
 		}
-		return nil
 	})
 	// Output:
 	// received output: this is a line

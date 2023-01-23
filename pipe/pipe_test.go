@@ -21,10 +21,7 @@ func TestStream(t *testing.T) {
 	}()
 
 	var read strings.Builder
-	err := s.Stream(func(line string) error {
-		_, err := read.WriteString(line + "\n")
-		return err
-	})
+	err := s.Stream(func(line string) { read.WriteString(line + "\n") })
 	assert.NoError(t, err)
 	assert.Equal(t, size, read.Len()-1) // we append an extra newline
 }
@@ -40,10 +37,7 @@ func TestBoundedStream(t *testing.T) {
 	}()
 
 	var read strings.Builder
-	err := s.Stream(func(line string) error {
-		_, err := read.WriteString(line + "\n")
-		return err
-	})
+	err := s.Stream(func(line string) { read.WriteString(line + "\n") })
 	assert.NoError(t, err)
 	assert.Equal(t, size, read.Len()-1) // we append an extra newline
 }
