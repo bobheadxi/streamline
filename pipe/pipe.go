@@ -25,6 +25,10 @@ type WriterErrorCloser interface {
 // The returned WriterErrorCloser must be closed by the caller when all data has been
 // written or when an error occurs at the source to indicate to the stream that no further
 // data will become available.
+//
+// For a purely in-memory buffer, NewBoundedStream can be used. For more advanced
+// configurations, consider configuring a pipe directly with github.com/djherbis/nio/v3 or
+// a pipe of your choice.
 func NewStream() (writer WriterErrorCloser, stream *streamline.Stream) {
 	outputBuffer := makeUnboundedBuffer()
 
@@ -42,6 +46,8 @@ func NewStream() (writer WriterErrorCloser, stream *streamline.Stream) {
 // The returned WriterErrorCloser must be closed by the caller when all data has been
 // written or when an error occurs at the source to indicate to the stream that no further
 // data will become available.
+//
+// For a stream that safely overflows the buffer onto disk, use NewStream instead.
 func NewBoundedStream() (writer WriterErrorCloser, stream *streamline.Stream) {
 	outputBuffer := makeMemoryBuffer()
 
