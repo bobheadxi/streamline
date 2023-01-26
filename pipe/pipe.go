@@ -22,8 +22,9 @@ type WriterErrorCloser interface {
 // FileBuffersSize). The writer and reader portions of the pipe can be written to and read
 // asynchronously.
 //
-// The writer should be closed by the caller when all data has been written or when an
-// error occurs at the source.
+// The returned WriterErrorCloser must be closed by the caller when all data has been
+// written or when an error occurs at the source to indicate to the stream that no further
+// data will become available.
 func NewStream() (writer WriterErrorCloser, stream *streamline.Stream) {
 	outputBuffer := makeUnboundedBuffer()
 
@@ -38,8 +39,9 @@ func NewStream() (writer WriterErrorCloser, stream *streamline.Stream) {
 // temporary files.  The writer and reader portions of the pipe can be written to and read
 // asynchronously.
 //
-// The writer should be closed by the caller when all data has been written or when an
-// error occurs at the source.
+// The returned WriterErrorCloser must be closed by the caller when all data has been
+// written or when an error occurs at the source to indicate to the stream that no further
+// data will become available.
 func NewBoundedStream() (writer WriterErrorCloser, stream *streamline.Stream) {
 	outputBuffer := makeMemoryBuffer()
 
