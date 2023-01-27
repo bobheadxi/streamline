@@ -29,7 +29,7 @@ func TestMap(t *testing.T) {
 
 func TestErrMap(t *testing.T) {
 	t.Run("active", func(t *testing.T) {
-		p := ErrMap(func(line []byte) ([]byte, error) { return line, errors.New("foo") })
+		p := MapErr(func(line []byte) ([]byte, error) { return line, errors.New("foo") })
 		assert.False(t, p.Inactive())
 
 		line, err := p.ProcessLine([]byte("foo"))
@@ -38,7 +38,7 @@ func TestErrMap(t *testing.T) {
 	})
 
 	t.Run("inactive", func(t *testing.T) {
-		p := ErrMap(nil)
+		p := MapErr(nil)
 		assert.True(t, p.Inactive())
 
 		line, err := p.ProcessLine([]byte("foo"))

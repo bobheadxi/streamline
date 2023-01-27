@@ -1,7 +1,7 @@
 package pipeline
 
-// Sample is a Pipeline that only includes every Nth line from streamline.Stream.
-type Sample struct {
+// Sampler is a Pipeline that only includes every Nth line from streamline.Stream.
+type Sampler struct {
 	// N indicates that this Sample pipeline should only retain every Nth line from the
 	// output.
 	//
@@ -12,11 +12,17 @@ type Sample struct {
 	current int
 }
 
-var _ Pipeline = (*Sample)(nil)
+var _ Pipeline = (*Sampler)(nil)
 
-func (s *Sample) Inactive() bool { return s == nil || s.N == 0 || s.N == 1 }
+// Sample creates a Sampler pipeline that only includes every nth line from
+// streamline.Stream.
+func Sample(n int) *Sampler {
+	return &Sampler{N: n}
+}
 
-func (s *Sample) ProcessLine(line []byte) ([]byte, error) {
+func (s *Sampler) Inactive() bool { return s == nil || s.N == 0 || s.N == 1 }
+
+func (s *Sampler) ProcessLine(line []byte) ([]byte, error) {
 	if s.Inactive() {
 		return line, nil
 	}

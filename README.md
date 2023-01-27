@@ -154,7 +154,7 @@ func PrintEvery10th(r io.Reader) error {
 ```go
 func PrintEvery10th(r io.Reader) error {
 	return streamline.New(r).
-		WithPipeline(&pipeline.Sample{N: 10}).
+		WithPipeline(pipeline.Sample(10)).
 		Stream(func(line string) {
 			println(line)
 		})

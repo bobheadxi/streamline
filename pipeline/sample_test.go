@@ -12,7 +12,7 @@ import (
 
 func TestSample(t *testing.T) {
 	stream := streamline.New(strings.NewReader("foo bar baz\nbaz bar\nhello world\ngoodbye world")).
-		WithPipeline(&pipeline.Sample{N: 2})
+		WithPipeline(pipeline.Sample(2))
 
 	lines, err := stream.Lines()
 	require.NoError(t, err)

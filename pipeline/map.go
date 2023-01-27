@@ -15,18 +15,18 @@ func (m Map) ProcessLine(line []byte) ([]byte, error) {
 	return m(line), nil
 }
 
-// ErrMap is a Pipeline that allows modifications of individual lines from
+// MapErr is a Pipeline that allows modifications of individual lines from
 // streamline.Stream with error handling. Implementations can return a nil []byte to
 // indicate a line is to be skipped.
 //
 // Errors interrupt line processing and are propagated to streamline.Stream.
-type ErrMap func(line []byte) ([]byte, error)
+type MapErr func(line []byte) ([]byte, error)
 
-var _ Pipeline = (ErrMap)(nil)
+var _ Pipeline = (MapErr)(nil)
 
-func (m ErrMap) Inactive() bool { return m == nil }
+func (m MapErr) Inactive() bool { return m == nil }
 
-func (m ErrMap) ProcessLine(line []byte) ([]byte, error) {
+func (m MapErr) ProcessLine(line []byte) ([]byte, error) {
 	if m.Inactive() {
 		return line, nil
 	}

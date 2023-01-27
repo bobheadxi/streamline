@@ -20,10 +20,10 @@ func Pipeline(query string) pipeline.Pipeline {
 func PipelineContext(ctx context.Context, query string) pipeline.Pipeline {
 	jqCode, err := buildJQ(query)
 	if err != nil {
-		return pipeline.ErrMap(func(line []byte) ([]byte, error) { return nil, err })
+		return pipeline.MapErr(func(line []byte) ([]byte, error) { return nil, err })
 	}
 
-	return pipeline.ErrMap(func(line []byte) ([]byte, error) {
+	return pipeline.MapErr(func(line []byte) ([]byte, error) {
 		if len(line) == 0 {
 			return line, nil
 		}

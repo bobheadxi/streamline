@@ -128,7 +128,7 @@ func TestStreamWithPipeline(t *testing.T) {
 		{
 			generate: func(s *streamline.Stream) (any, error) {
 				var count int
-				s = s.WithPipeline(pipeline.ErrMap(func(line []byte) ([]byte, error) {
+				s = s.WithPipeline(pipeline.MapErr(func(line []byte) ([]byte, error) {
 					count += 1
 					if count > 2 {
 						return nil, errors.New("oh no!")
