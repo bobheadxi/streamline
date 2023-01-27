@@ -12,7 +12,7 @@ type Sample struct {
 	current int
 }
 
-var _ Pipeline = (Filter)(nil)
+var _ Pipeline = (*Sample)(nil)
 
 func (s *Sample) Inactive() bool { return s == nil || s.N == 0 || s.N == 1 }
 
