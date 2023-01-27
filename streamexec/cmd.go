@@ -28,7 +28,7 @@ const (
 )
 
 // Start attaches a streamline.Stream to the command and starts it. It returns an error
-// if the command fails to start. If the command succesfully starts, it also starts a
+// if the command fails to start. If the command successfully starts, it also starts a
 // goroutine that waits for command completion and stops the pipe appropriately.
 //
 // Instead of using cmd.Wait() for command completion, callers should read the returned

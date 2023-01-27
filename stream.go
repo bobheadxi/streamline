@@ -69,8 +69,8 @@ func (s *Stream) WithPipeline(p pipeline.Pipeline) *Stream {
 }
 
 // WithLineSeparator configures a custom line separator for this stream. The default is '\n'.
-func (s *Stream) WithLineSeparator(seperator byte) *Stream {
-	s.lineSeparator = seperator
+func (s *Stream) WithLineSeparator(separator byte) *Stream {
+	s.lineSeparator = separator
 	return s
 }
 
