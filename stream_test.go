@@ -55,6 +55,20 @@ func TestStream(t *testing.T) {
 			},
 			want: autogold.Want("Copy", "foo bar baz\nbaz bar\nhello world"),
 		},
+		{
+			generate: func(s *streamline.Stream) (any, error) {
+				var count int
+				return nil, s.StreamBytes(func(line []byte) error {
+					count += 1
+					if count > 2 {
+						return errors.New("oh no!")
+					}
+					return nil
+				})
+			},
+			want:    autogold.Want("handler error", "oh no!"),
+			wantErr: true,
+		},
 	} {
 		t.Run(tc.want.Name(), func(t *testing.T) {
 			got, err := tc.generate(newStream())
