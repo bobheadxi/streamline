@@ -2,6 +2,7 @@ package streamline_test
 
 import (
 	"bytes"
+	"errors"
 	"io"
 	"strings"
 	"testing"
@@ -123,6 +124,24 @@ func TestStreamWithPipeline(t *testing.T) {
 				return sb.String(), err
 			},
 			want: autogold.Want("WithPipeline multiple", "foo-robert-baz\nbaz-robert\nhello-world\n"),
+		},
+		{
+			generate: func(s *streamline.Stream) (any, error) {
+				var count int
+				s = s.WithPipeline(pipeline.ErrMap(func(line []byte) ([]byte, error) {
+					count += 1
+					if count > 2 {
+						return nil, errors.New("oh no!")
+					}
+					return line, nil
+				}))
+
+				var sb strings.Builder
+				_, err := io.Copy(&sb, s)
+				return sb.String(), err
+			},
+			want:    autogold.Want("WithPipeline failure", "oh no!"),
+			wantErr: true,
 		},
 	} {
 		t.Run(tc.want.Name(), func(t *testing.T) {
