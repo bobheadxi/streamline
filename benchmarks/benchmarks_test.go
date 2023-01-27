@@ -18,14 +18,55 @@ func BenchmarkBufioReader(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		reset()
 
-		r := bufio.NewReader(input)
+		// assert we are benchmarking against a bare LineReader
+		var r streamline.LineReader = bufio.NewReader(input)
 		for {
-			_, err := r.ReadBytes('\n')
+			_, err := r.ReadSlice('\n')
 			if errors.Is(err, io.EOF) {
 				break
 			}
 			assert.NoError(b, err)
 		}
+	}
+}
+
+func BenchmarkBufioScannerBytes(b *testing.B) {
+	input, reset := testdata.GenerateInput()
+
+	for i := 0; i < b.N; i++ {
+		reset()
+
+		s := bufio.NewScanner(input)
+		for s.Scan() {
+			_ = s.Bytes()
+		}
+		assert.NoError(b, s.Err())
+	}
+}
+
+func BenchmarkBufioScannerText(b *testing.B) {
+	input, reset := testdata.GenerateInput()
+
+	for i := 0; i < b.N; i++ {
+		reset()
+
+		s := bufio.NewScanner(input)
+		for s.Scan() {
+			_ = s.Text()
+		}
+		assert.NoError(b, s.Err())
+	}
+}
+
+func BenchmarkStream(b *testing.B) {
+	input, reset := testdata.GenerateInput()
+
+	for i := 0; i < b.N; i++ {
+		reset()
+
+		s := streamline.New(input)
+		err := s.Stream(func(_ string) {})
+		assert.NoError(b, err)
 	}
 }
 
