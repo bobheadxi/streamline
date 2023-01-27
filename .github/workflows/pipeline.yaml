@@ -45,7 +45,7 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}
         INPUT_PRUNE_COUNT: 30
-        INPUT_GO_TEST_FLAGS: -run=^$ -benchtime=1000000x
+        INPUT_GO_TEST_FLAGS: -run=^$ -benchtime=100000x
         INPUT_GOBENCHDATA_PARSE_FLAGS: --flat
         # 'push' event only triggers on pushes to main
         INPUT_PUBLISH: ${{ github.event_name == 'push' }}
