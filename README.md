@@ -18,7 +18,7 @@ go get go.bobheadxi.dev/streamline
 - [`streamline.Stream`](https://pkg.go.dev/go.bobheadxi.dev/streamline#Stream) offers the ability to add hooks that handle an `io.Reader` line-by-line with `(*Stream).Stream`, `(*Stream).StreamBytes`, and other utilities.
 - [`pipeline.Pipeline`](https://pkg.go.dev/go.bobheadxi.dev/streamline/pipeline#Pipeline) offers a way to build pipelines that transform the data in a `streamline.Stream`, such as cleaning, filtering, mapping, or sampling data.
   - [`jq.Pipeline`](https://pkg.go.dev/go.bobheadxi.dev/streamline/jq#Pipeline) can be used to map every line to the output of a JQ query, for example.
-  - `streamline.Stream` [implements standard `io` interfaces like `io.Reader`](https://pkg.go.dev/go.bobheadxi.dev/streamline#Stream.Read) as well, so `pipeline.Pipeline` can be used for general-purpose data manipulation as well.
+  - [`streamline.Stream` implements standard `io` interfaces like `io.Reader`](https://pkg.go.dev/go.bobheadxi.dev/streamline#Stream.Read), so `pipeline.Pipeline` can be used for general-purpose data manipulation as well.
 - [`pipe.NewStream`](https://pkg.go.dev/go.bobheadxi.dev/streamline/pipe#NewStream) offers a way to create a buffered pipe between a writer and a `Stream`.
   - [`streamexec.Start`](https://pkg.go.dev/go.bobheadxi.dev/streamline/streamexec#Start) uses this to attach a `Stream` to an `exec.Cmd` to work with command output.
 
