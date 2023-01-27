@@ -5,7 +5,7 @@ type Sampler struct {
 	// N indicates that this Sample pipeline should only retain every Nth line from the
 	// output.
 	//
-	// If set to 0 or 1, this Pipeline is marked as inactive.
+	// If set to 0, 1, or a negative value, this Pipeline is marked as inactive.
 	N int
 
 	// current is an internal counter.
@@ -20,7 +20,7 @@ func Sample(n int) *Sampler {
 	return &Sampler{N: n}
 }
 
-func (s *Sampler) Inactive() bool { return s == nil || s.N == 0 || s.N == 1 }
+func (s *Sampler) Inactive() bool { return s == nil || s.N <= 1 }
 
 func (s *Sampler) ProcessLine(line []byte) ([]byte, error) {
 	if s.Inactive() {
