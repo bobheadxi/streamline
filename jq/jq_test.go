@@ -39,6 +39,15 @@ func TestPipeline(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, `"bar"`, string(l))
 	})
+
+	t.Run("skip empty line", func(t *testing.T) {
+		p := Pipeline(".foo")
+		assert.False(t, p.Inactive())
+
+		l, err := p.ProcessLine([]byte{})
+		assert.NoError(t, err)
+		assert.Equal(t, ``, string(l))
+	})
 }
 
 func TestQuery(t *testing.T) {
