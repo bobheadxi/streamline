@@ -179,7 +179,7 @@ func (s *Stream) Read(p []byte) (int, error) {
 	// Next, written some lines into the buffer.
 	var (
 		written int
-		skipped = false
+		skipped bool
 		err     error
 	)
 	for {
