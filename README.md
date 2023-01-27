@@ -13,17 +13,16 @@ go get go.bobheadxi.dev/streamline
 
 ## Overview
 
-`streamline` offers a variety of primitives that aim to make working with data line by line a breeze:
+[`streamline`](https://pkg.go.dev/go.bobheadxi.dev/streamline) offers a variety of primitives to make working with data line by line a breeze:
 
-- `streamline.Stream` offers the ability to add hooks that handle an `io.Reader` line-by-line with `(*Stream).Stream(LineHandler[string])` and `(*Stream).StreamBytes(LineHandler[[]byte])`.
-- `pipeline.Pipeline` offers a way to build pipelines that transform the data in a `streamline.Stream`, such as cleaning, filtering, mapping, or sampling data.
-  - `jq.Pipeline` can be used to map every line to the output of a JQ query, for example.
-- `pipe.NewStream` offers a way to create a buffered pipe between a writer and a `Stream`.
-  - Package `streamexec` uses this to attach a `Stream` to an `exec.Cmd`.
+- [`streamline.Stream`](https://pkg.go.dev/go.bobheadxi.dev/streamline#Stream) offers the ability to add hooks that handle an `io.Reader` line-by-line with `(*Stream).Stream`, `(*Stream).StreamBytes`, and other utilities.
+- [`pipeline.Pipeline`](https://pkg.go.dev/go.bobheadxi.dev/streamline/pipeline#Pipeline) offers a way to build pipelines that transform the data in a `streamline.Stream`, such as cleaning, filtering, mapping, or sampling data.
+  - [`jq.Pipeline`](https://pkg.go.dev/go.bobheadxi.dev/streamline/jq#Pipeline) can be used to map every line to the output of a JQ query, for example.
+  - `streamline.Stream` [implements standard `io` interfaces like `io.Reader`](https://pkg.go.dev/go.bobheadxi.dev/streamline#Stream.Read) as well, so `pipeline.Pipeline` can be used for general-purpose data manipulation as well.
+- [`pipe.NewStream`](https://pkg.go.dev/go.bobheadxi.dev/streamline/pipe#NewStream) offers a way to create a buffered pipe between a writer and a `Stream`.
+  - [`streamexec.Start`](https://pkg.go.dev/go.bobheadxi.dev/streamline/streamexec#Start) uses this to attach a `Stream` to an `exec.Cmd` to work with command output.
 
-When working with data streams in Go, you typically get an `io.Reader`, which is great for arbitrary data - but in many cases, especially when scripting, it's common to either end up with data and outputs that are structured line by line, or want to handle data line by line, for example to send to a structured logging library.
-
-You can set up a `bufio.Reader` or `bufio.Scanner` to read data line by line, but for cases like `exec.Cmd` you will also need boilerplate to configure the command and set up pipes, and for additional functionality like transforming, filtering, or sampling output you will need to write your own additional handlers.
+When working with data streams in Go, you typically get an `io.Reader`, which is great for arbitrary data - but in many cases, especially when scripting, it's common to either end up with data and outputs that are structured line by line, or want to handle data line by line, for example to send to a structured logging library. You can set up a `bufio.Reader` or `bufio.Scanner` to do this, but for cases like `exec.Cmd` you will also need boilerplate to configure the command and set up pipes, and for additional functionality like transforming, filtering, or sampling output you will need to write your own additional handlers. `streamline` aims to provide succint ways to do all of the above and more.
 
 ### Add prefixes to command output
 
@@ -153,7 +152,6 @@ func PrintEvery10th(r io.Reader) error {
 <td>
 
 ```go
-foo
 func PrintEvery10th(r io.Reader) error {
 	return streamline.New(r).
 		WithPipeline(&pipeline.Sample{N: 10}).
@@ -169,4 +167,4 @@ func PrintEvery10th(r io.Reader) error {
 
 ## Background
 
-Some of the ideas in this package started in [`sourcegraph/run`](https://github.com/sourcegraph/run), where we were trying to build utilities that [made it easier to write bash-esque scripts using Go](https://github.com/sourcegraph/sourcegraph/blob/main/doc/dev/adr/1652433602-use-go-for-scripting.md), namely being able to do things you would often to in scripts such as grepping and iterating over lines.
+Some of the ideas in this package started in [`sourcegraph/run`](https://github.com/sourcegraph/run), where we were trying to build utilities that [made it easier to write bash-esque scripts using Go](https://github.com/sourcegraph/sourcegraph/blob/main/doc/dev/adr/1652433602-use-go-for-scripting.md), namely being able to do things you would often to in scripts such as grepping and iterating over lines. `streamline` generalizes on the ideas for working with newline-delimited data to work for arbitrary inputs.
