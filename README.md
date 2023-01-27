@@ -13,10 +13,6 @@ go get go.bobheadxi.dev/streamline
 
 ## Overview
 
-When working with data streams in Go, you typically get an `io.Reader`, which is great for arbitrary data - but in many cases, especially when scripting, it's common to either end up with data and outputs that are structured line by line, or want to handle data line by line, for example to send to a structured logging library.
-
-You can set up a `bufio.Reader` or `bufio.Scanner` to read data line by line, but for cases like `exec.Cmd` you will also need boilerplate to configure the command and set up pipes.
-
 `streamline` offers a variety of primitives that aim to make working with data line by line a breeze:
 
 - `streamline.Stream` offers the ability to add hooks that handle an `io.Reader` line-by-line with `(*Stream).Stream(LineHandler[string])` and `(*Stream).StreamBytes(LineHandler[[]byte])`.
@@ -24,6 +20,152 @@ You can set up a `bufio.Reader` or `bufio.Scanner` to read data line by line, bu
   - `jq.Pipeline` can be used to map every line to the output of a JQ query, for example.
 - `pipe.NewStream` offers a way to create a buffered pipe between a writer and a `Stream`.
   - Package `streamexec` uses this to attach a `Stream` to an `exec.Cmd`.
+
+When working with data streams in Go, you typically get an `io.Reader`, which is great for arbitrary data - but in many cases, especially when scripting, it's common to either end up with data and outputs that are structured line by line, or want to handle data line by line, for example to send to a structured logging library.
+
+You can set up a `bufio.Reader` or `bufio.Scanner` to read data line by line, but for cases like `exec.Cmd` you will also need boilerplate to configure the command and set up pipes, and for additional functionality like transforming, filtering, or sampling output you will need to write your own additional handlers.
+
+### Add prefixes to command output
+
+<table>
+<tr>
+  <th><code>bufio.Scanner</code></th>
+  <th><code>streamline/streamexec</code></th>
+</tr>
+<tr>
+<td>
+
+```go
+func PrefixCommandOutput(cmd *exec.Cmd) error {
+	reader, writer := io.Pipe()
+	cmd.Stdout = writer
+	if err := cmd.Start(); err != nil {
+		return err
+	}
+	errC := make(chan error)
+	go func() {
+		err := cmd.Wait()
+		writer.Close()
+		errC <- err
+	}()
+	scanner := bufio.NewScanner(reader)
+	for scanner.Scan() {
+		println("PREFIX: ", scanner.Text())
+	}
+	if err := scanner.Err(); err != nil {
+		return err
+	}
+	return <-errC
+}
+```
+
+</td>
+<td>
+
+```go
+func PrefixCommandOutput(cmd *exec.Cmd) error {
+	stream, err := streamexec.Start(cmd, streamexec.Stdout)
+	if err != nil {
+		return err
+	}
+	return stream.Stream(func(line string) {
+		println("PREFIX: ", line)
+	})
+}
+```
+
+</td>
+</tr>
+</table>
+
+### Process JSON on the fly
+
+<table>
+<tr>
+  <th><code>bufio.Scanner</code></th>
+  <th><code>streamline</code></th>
+</tr>
+<tr>
+<td>
+
+```go
+func GetMessages(r io.Reader) error {
+	scanner := bufio.NewScanner(r)
+	for scanner.Scan() {
+		var result bytes.Buffer
+		cmd := exec.Command("jq", ".msg")
+		cmd.Stdin = bytes.NewReader(scanner.Bytes())
+		cmd.Stdout = &result
+		if err := cmd.Run(); err != nil {
+			return err
+		}
+		println(strings.TrimSuffix(result.String(), "\n"))
+	}
+	return scanner.Err()
+}
+```
+
+</td>
+
+<td>
+
+```go
+func GetMessages(r io.Reader) error {
+	return streamline.New(r).
+		WithPipeline(jq.Pipeline(".msg")).
+		Stream(func(line string) {
+			println(line)
+		})
+}
+```
+
+</td>
+</tr>
+</table>
+
+### Sample noisy output
+
+<table>
+<tr>
+  <th><code>bufio.Scanner</code></th>
+  <th><code>streamline</code></th>
+</tr>
+<tr>
+<td>
+
+```go
+func PrintEvery10th(r io.Reader) error {
+	scanner := bufio.NewScanner(r)
+	var count int
+	for scanner.Scan() {
+		count++
+		if count%10 != 0 {
+			continue
+		}
+		println(scanner.Text())
+	}
+	return scanner.Err()
+}
+```
+
+</td>
+
+<td>
+
+```go
+foo
+func PrintEvery10th(r io.Reader) error {
+	return streamline.New(r).
+		WithPipeline(&pipeline.Sample{N: 10}).
+		Stream(func(line string) {
+			println(line)
+		})
+}
+```
+
+</td>
+</tr>
+</table>
 
 ## Background
 
