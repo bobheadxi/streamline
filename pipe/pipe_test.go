@@ -1,6 +1,7 @@
 package pipe
 
 import (
+	"errors"
 	"io"
 	"strings"
 	"testing"
@@ -40,4 +41,16 @@ func TestBoundedStream(t *testing.T) {
 	err := s.Stream(func(line string) { read.WriteString(line + "\n") })
 	assert.NoError(t, err)
 	assert.Equal(t, size, read.Len()-1) // we append an extra newline
+}
+
+func TestWriterErrorCloser(t *testing.T) {
+	w, s := NewStream()
+	_, err := w.Write([]byte("foo\nbar"))
+	assert.NoError(t, err)
+
+	_ = w.CloseWithError(errors.New("oh no!"))
+	v, err := s.String()
+	assert.Equal(t, "foo\nbar", v)
+	require.Error(t, err)
+	assert.Equal(t, "oh no!", err.Error())
 }
