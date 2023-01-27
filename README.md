@@ -36,25 +36,25 @@ When working with data streams in Go, you typically get an `io.Reader`, which is
 
 ```go
 func PrefixCommandOutput(cmd *exec.Cmd) error {
-	reader, writer := io.Pipe()
-	cmd.Stdout = writer
-	if err := cmd.Start(); err != nil {
-		return err
-	}
-	errC := make(chan error)
-	go func() {
-		err := cmd.Wait()
-		writer.Close()
-		errC <- err
-	}()
-	scanner := bufio.NewScanner(reader)
-	for scanner.Scan() {
-		println("PREFIX: ", scanner.Text())
-	}
-	if err := scanner.Err(); err != nil {
-		return err
-	}
-	return <-errC
+    reader, writer := io.Pipe()
+    cmd.Stdout = writer
+    if err := cmd.Start(); err != nil {
+        return err
+    }
+    errC := make(chan error)
+    go func() {
+        err := cmd.Wait()
+        writer.Close()
+        errC <- err
+    }()
+    scanner := bufio.NewScanner(reader)
+    for scanner.Scan() {
+        println("PREFIX: ", scanner.Text())
+    }
+    if err := scanner.Err(); err != nil {
+        return err
+    }
+    return <-errC
 }
 ```
 
@@ -63,13 +63,13 @@ func PrefixCommandOutput(cmd *exec.Cmd) error {
 
 ```go
 func PrefixCommandOutput(cmd *exec.Cmd) error {
-	stream, err := streamexec.Start(cmd, streamexec.Stdout)
-	if err != nil {
-		return err
-	}
-	return stream.Stream(func(line string) {
-		println("PREFIX: ", line)
-	})
+    stream, err := streamexec.Start(cmd, streamexec.Stdout)
+    if err != nil {
+        return err
+    }
+    return stream.Stream(func(line string) {
+        println("PREFIX: ", line)
+    })
 }
 ```
 
@@ -89,18 +89,19 @@ func PrefixCommandOutput(cmd *exec.Cmd) error {
 
 ```go
 func GetMessages(r io.Reader) error {
-	scanner := bufio.NewScanner(r)
-	for scanner.Scan() {
-		var result bytes.Buffer
-		cmd := exec.Command("jq", ".msg")
-		cmd.Stdin = bytes.NewReader(scanner.Bytes())
-		cmd.Stdout = &result
-		if err := cmd.Run(); err != nil {
-			return err
-		}
-		println(strings.TrimSuffix(result.String(), "\n"))
-	}
-	return scanner.Err()
+    scanner := bufio.NewScanner(r)
+    for scanner.Scan() {
+        var result bytes.Buffer
+        cmd := exec.Command("jq", ".msg")
+        cmd.Stdin = bytes.NewReader(scanner.Bytes())
+        cmd.Stdout = &result
+        if err := cmd.Run(); err != nil {
+            return err
+        }
+        line := result.String()
+        println(strings.TrimSuffix(line, "\n"))
+    }
+    return scanner.Err()
 }
 ```
 
@@ -110,11 +111,11 @@ func GetMessages(r io.Reader) error {
 
 ```go
 func GetMessages(r io.Reader) error {
-	return streamline.New(r).
-		WithPipeline(jq.Pipeline(".msg")).
-		Stream(func(line string) {
-			println(line)
-		})
+    return streamline.New(r).
+        WithPipeline(jq.Pipeline(".msg")).
+        Stream(func(line string) {
+            println(line)
+        })
 }
 ```
 
@@ -134,16 +135,16 @@ func GetMessages(r io.Reader) error {
 
 ```go
 func PrintEvery10th(r io.Reader) error {
-	scanner := bufio.NewScanner(r)
-	var count int
-	for scanner.Scan() {
-		count++
-		if count%10 != 0 {
-			continue
-		}
-		println(scanner.Text())
-	}
-	return scanner.Err()
+    scanner := bufio.NewScanner(r)
+    var count int
+    for scanner.Scan() {
+        count++
+        if count%10 != 0 {
+            continue
+        }
+        println(scanner.Text())
+    }
+    return scanner.Err()
 }
 ```
 
@@ -153,11 +154,11 @@ func PrintEvery10th(r io.Reader) error {
 
 ```go
 func PrintEvery10th(r io.Reader) error {
-	return streamline.New(r).
-		WithPipeline(pipeline.Sample(10)).
-		Stream(func(line string) {
-			println(line)
-		})
+    return streamline.New(r).
+        WithPipeline(pipeline.Sample(10)).
+        Stream(func(line string) {
+            println(line)
+        })
 }
 ```
 
