@@ -11,7 +11,9 @@ type Pipeline interface {
 	// streamline.Stream to optimize for cases where accommodating a Pipeline adds overhead.
 	Inactive() bool
 	// ProcessLine returns a modified, unmodified, or omitted line. To omit a line, return
-	// a nil []byte - an empty []byte will be retained.
+	// a nil []byte - an empty []byte will cause an empty line to be retained.
+	//
+	// Implementations must not retain line.
 	ProcessLine(line []byte) ([]byte, error)
 }
 

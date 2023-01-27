@@ -10,11 +10,14 @@ import (
 	"go.bobheadxi.dev/streamline/pipeline"
 )
 
-// LineReader is a reader that implements the ability to read up to a line
-// delimiter.
+// LineReader is a reader that implements the ability to read up to a line delimiter.
+// It is used for internal assertion only, to determine if io.Readers provided to
+// streamline.New already implement the desired functionality - it is exported for
+// reference, and should not be depended upon, since the interface may change in the
+// future.
 type LineReader interface {
-	// ReadBytes should have the behaviour of (*bufio.Reader).ReadLine.
-	ReadBytes(delim byte) ([]byte, error)
+	// ReadSlice should have the behaviour of (*bufio.Reader).ReadSlice.
+	ReadSlice(delim byte) ([]byte, error)
 
 	io.WriterTo
 	io.Reader
@@ -92,6 +95,8 @@ func (s *Stream) Stream(dst func(line string)) error {
 //
 // This method will block until the input returns an error. Unless the error is io.EOF,
 // it will also propagate the error.
+//
+// Handlers must not retain line.
 func (s *Stream) StreamBytes(dst func(line []byte) error) error {
 	for {
 		_, err := s.readLine(dst)
@@ -232,7 +237,7 @@ func (s *Stream) Read(p []byte) (int, error) {
 // The read error in particular may be io.EOF, which the caller should handle on a
 // case-by-case basis.
 func (s *Stream) readLine(handle func(line []byte) error) (skipped bool, err error) {
-	line, readErr := s.reader.ReadBytes(s.lineSeparator)
+	line, readErr := s.reader.ReadSlice(s.lineSeparator)
 
 	if len(line) == 0 {
 		return true, readErr
