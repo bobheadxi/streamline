@@ -28,6 +28,7 @@ func TestStreamReadAll(t *testing.T) {
 	if *profile {
 		f, err := os.OpenFile(t.Name(), os.O_RDWR|os.O_CREATE, 0600)
 		require.NoError(t, err)
+		defer f.Close()
 		pprof.StartCPUProfile(f)
 	}
 
