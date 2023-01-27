@@ -13,6 +13,7 @@ import (
 // LineReader is a reader that implements the ability to read up to a line
 // delimiter.
 type LineReader interface {
+	// ReadBytes should have the behaviour of (*bufio.Reader).ReadLine.
 	ReadBytes(delim byte) ([]byte, error)
 
 	io.WriterTo
