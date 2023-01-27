@@ -38,6 +38,7 @@ When working with data streams in Go, you typically get an `io.Reader`, which is
 func PrefixCommandOutput(cmd *exec.Cmd) error {
     reader, writer := io.Pipe()
     cmd.Stdout = writer
+    cmd.Stderr = writer
     if err := cmd.Start(); err != nil {
         return err
     }
@@ -63,7 +64,7 @@ func PrefixCommandOutput(cmd *exec.Cmd) error {
 
 ```go
 func PrefixCommandOutput(cmd *exec.Cmd) error {
-    stream, err := streamexec.Start(cmd, streamexec.Stdout)
+    stream, err := streamexec.Start(cmd)
     if err != nil {
         return err
     }

@@ -14,7 +14,7 @@ import (
 type StreamMode int
 
 const (
-	// Combined streams both Stdout and Stderr.
+	// Combined streams both Stdout and Stderr. It is the default stream mode.
 	Combined StreamMode = Stdout | Stderr
 
 	// Stdout only streams cmd.Stdout.
@@ -23,13 +23,30 @@ const (
 	Stderr
 
 	// ErrWithStderr collects Stderr output and includes it in the returned error from
-	// Cmd.Start(). Best used with the Stdout StreamMode.
+	// Cmd.Start(). Best used with the Stdout StreamMode to avoid duplicating stderr
+	// output in the stream and in the returned error.
 	ErrWithStderr
 )
+
+type modeSet []StreamMode
+
+func (modes modeSet) getMode() StreamMode {
+	if len(modes) == 0 {
+		return Combined
+	}
+	var mode StreamMode
+	for _, m := range modes {
+		mode |= m
+	}
+	return mode
+}
 
 // Start attaches a streamline.Stream to the command and starts it. It returns an error
 // if the command fails to start. If the command successfully starts, it also starts a
 // goroutine that waits for command completion and stops the pipe appropriately.
+//
+// If no modes are provided, the default stream mode is Combined. If multiple modes are
+// provided, they are all included.
 //
 // Instead of using cmd.Wait() for command completion, callers should read the returned
 // Stream until completion to indicate if the command has exited.
@@ -38,9 +55,10 @@ const (
 // using e.g. WithPipeline.
 //
 // Output piping is handled by buffers created by streamline/pipe.NewStream(...).
-func Start(cmd *exec.Cmd, mode StreamMode) (*streamline.Stream, error) {
+func Start(cmd *exec.Cmd, modes ...StreamMode) (*streamline.Stream, error) {
 	streamWriter, stream := pipe.NewStream()
 
+	mode := modeSet(modes).getMode()
 	if mode&Stdout != 0 {
 		cmd.Stdout = streamWriter
 	}

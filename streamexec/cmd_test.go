@@ -14,7 +14,7 @@ import (
 
 func TestRun(t *testing.T) {
 	cmd := exec.Command("echo", "hello world\nthis is a line\nand another line!")
-	stream, err := streamexec.Start(cmd, streamexec.Combined)
+	stream, err := streamexec.Start(cmd) // should default to combined
 	require.NoError(t, err)
 
 	out, err := stream.String()
@@ -57,7 +57,7 @@ func TestError(t *testing.T) {
 			`echo "stdout" ; sleep 0.001 ; >&2 echo "stderr" ; exit 1`)
 		var errBuf bytes.Buffer
 		cmd.Stderr = &errBuf
-		stream, err := streamexec.Start(cmd, streamexec.Stdout|streamexec.ErrWithStderr)
+		stream, err := streamexec.Start(cmd, streamexec.Stdout, streamexec.ErrWithStderr)
 		require.NoError(t, err)
 
 		_, err = stream.String()
