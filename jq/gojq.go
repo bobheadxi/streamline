@@ -29,23 +29,26 @@ func execJQ(ctx context.Context, jqCode *gojq.Code, data []byte) ([]byte, error)
 		return nil, fmt.Errorf("json: %w", err)
 	}
 
-	var result bytes.Buffer
+	var result bytes.Buffer // TODO: for Pipeline, maybe we should have a reusable buffer.
 	iter := jqCode.RunWithContext(ctx, input)
 	for {
+		// See https://github.com/itchyny/gojq#usage-as-a-library for how to use the
+		// iterator.
 		v, ok := iter.Next()
 		if !ok {
 			break
 		}
-
 		if err, ok := v.(error); ok {
 			return nil, fmt.Errorf("jq: %w", err)
 		}
-
 		encoded, err := gojq.Marshal(v)
 		if err != nil {
 			return nil, fmt.Errorf("jq: %w", err)
 		}
-		result.Write(encoded)
+
+		if _, err := result.Write(encoded); err != nil {
+			return nil, fmt.Errorf("jq: failed to write result buffer: %w", err)
+		}
 	}
 	return result.Bytes(), nil
 }
