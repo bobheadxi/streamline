@@ -16,7 +16,8 @@ import (
 // reference, and should not be depended upon, since the interface may change in the
 // future.
 type LineReader interface {
-	// ReadSlice should have the behaviour of (*bufio.Reader).ReadSlice.
+	// ReadSlice should have the behaviour of (*bufio.Reader).ReadSlice, returning bytes
+	// up to and including the delimiter.
 	ReadSlice(delim byte) ([]byte, error)
 
 	io.WriterTo
@@ -38,7 +39,8 @@ type Stream struct {
 	// pipeline, if active, must be used to pre-process lines.
 	pipeline pipeline.MultiPipeline
 
-	// readBuffer is set by incremental consumers like Read to store.
+	// readBuffer is set by incremental consumers like Read to store unread data
+	// from the reader.
 	readBuffer *bytes.Buffer
 
 	// lineSeparator is used as the read delimiter.
@@ -181,34 +183,32 @@ func (s *Stream) Read(p []byte) (int, error) {
 	// Unread data has been read - we can reset the buffer now.
 	s.readBuffer.Reset()
 
-	// Next, written some lines into the buffer.
-	var (
-		written int
-		skipped bool
-		err     error
-	)
+	// Next, written some lines into the buffer, keeping track of how much we have written
+	// into p.
+	var written int
 	for {
 		var currentLine []byte
-		skipped, err = s.readLine(func(next []byte) error {
+		skipped, err := s.readLine(func(next []byte) error {
 			currentLine = append(next, s.lineSeparator)
 			return nil
 		})
 
-		// If this was an empty line, keep reading for more data
+		// If this was skipped line (different from an empty line), keep reading for more
+		// data.
 		if skipped && err == nil {
 			continue
 		}
 
-		// Copy byte by byte
+		// Copy line byte by byte into b based on our current position, how much data is
+		// in the line, and how much we have already written.
 		for read := 0; read < len(currentLine); read++ {
-			// Copy data from current line into p
 			p[written] = currentLine[read]
 			written++
 
-			// p is full, we are done
+			// We have filled up p, we are done.
 			if written == len(p) {
-				// If we weren't done withthe current line, write the rest into
-				// the buffer.
+				// If we weren't done reading the current line, write the
+				// remainder into readBuffer - the next read will pick it up.
 				if read < len(currentLine) {
 					_, _ = s.readBuffer.Write(currentLine[read+1:])
 				}
@@ -217,13 +217,14 @@ func (s *Stream) Read(p []byte) (int, error) {
 			}
 		}
 
-		// If we hit an error, most likely EOF, we are done
+		// Now that the read is complete, if an error has occurred (typically io.EOF) then
+		// we are done.
 		if err != nil {
 			return written, err
 		}
 
-		// We were able to copy everything from currentLine into p, and p is not
-		// yet full, and our data is not yet exhausted - continue.
+		// We were able to copy everything from currentLine into p, and p is not yet full,
+		// and our data is not yet exhausted - continue.
 	}
 }
 
@@ -239,28 +240,37 @@ func (s *Stream) Read(p []byte) (int, error) {
 func (s *Stream) readLine(handle func(line []byte) error) (skipped bool, err error) {
 	line, readErr := s.reader.ReadSlice(s.lineSeparator)
 
-	if len(line) == 0 {
+	// If we got no data and encountered a read error, we can return immediately.
+	// Generally, a non-nil readErr is an io.EOF if len(line) > 0, so after this point
+	// we prefer to return other errors.
+	if len(line) == 0 && readErr != nil {
 		return true, readErr
 	}
 
-	// If the line ends with a newline, trim it before handing it off to the
-	// LineHandler.
+	// If the line ends with a newline, trim it before handling it - callers should add
+	// it back as necessary.
 	if line[len(line)-1] == s.lineSeparator {
 		line = line[:len(line)-1]
 	}
 
+	// Run the line through any configured pipelines. Processing errors take precedence
+	// over readErr still.
 	var processErr error
 	if line, processErr = s.pipeline.ProcessLine(line); processErr != nil {
 		return false, processErr
 	}
 
+	// Pipelines only return nil lines if the line should be skipped entirely.
 	if line == nil {
 		return true, nil
 	}
 
+	// We give the processed line to the handler, returning the handler error if we
+	// receive one - it continues to take precedence over readErr.
 	if dstErr := handle(line); dstErr != nil {
 		return false, dstErr
 	}
 
+	// Finally, if no other errors occur, we can return readErr.
 	return false, readErr
 }
