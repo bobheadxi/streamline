@@ -56,14 +56,14 @@ func (modes modeSet) getMode() StreamMode {
 //
 // Output piping is handled by buffers created by streamline/pipe.NewStream(...).
 func Start(cmd *exec.Cmd, modes ...StreamMode) (*streamline.Stream, error) {
-	streamWriter, stream := pipe.NewStream()
+	pipeWriter, stream := pipe.NewStream()
 
 	mode := modeSet(modes).getMode()
 	if mode&Stdout != 0 {
-		cmd.Stdout = streamWriter
+		cmd.Stdout = pipeWriter
 	}
 	if mode&Stderr != 0 {
-		cmd.Stderr = streamWriter
+		cmd.Stderr = pipeWriter
 	}
 
 	var stderr *strings.Builder
@@ -76,16 +76,22 @@ func Start(cmd *exec.Cmd, modes ...StreamMode) (*streamline.Stream, error) {
 		}
 	}
 
+	// Start running the command in the background.
 	if err := cmd.Start(); err != nil {
+		pipeWriter.CloseWithError(nil) // Close pipe to let stream exit gracefully if used
 		return stream, err
 	}
 
+	// Wait for the command to complete in the background so we can propagate the error
+	// back to the stream.
 	go func() {
 		err := cmd.Wait()
+		// If we are tracking stderr and got some data, wrap the error with stderr output
 		if err != nil && stderr != nil && stderr.Len() > 0 {
 			err = fmt.Errorf("%w: %s", err, strings.TrimSuffix(stderr.String(), "\n"))
 		}
-		streamWriter.CloseWithError(err)
+		// Propagate command error to the stream
+		pipeWriter.CloseWithError(err)
 	}()
 
 	return stream, nil

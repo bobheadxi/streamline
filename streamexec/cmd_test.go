@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/hexops/autogold"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"go.bobheadxi.dev/streamline/pipeline"
@@ -44,10 +45,8 @@ and another line!`).Equal(t, out)
 
 		autogold.Want("run output with pipeline", "this is a line\nand another line!").Equal(t, out)
 	})
-}
 
-func TestError(t *testing.T) {
-	t.Run("simple", func(t *testing.T) {
+	t.Run("stderr and exit", func(t *testing.T) {
 		t.Parallel()
 
 		cmd := exec.Command("bash", "-o", "pipefail", "-o", "errexit", "-c",
@@ -60,7 +59,8 @@ func TestError(t *testing.T) {
 		autogold.Want("got error with stderr", "exit status 1: stderr").Equal(t, err.Error())
 		autogold.Want("get only stdout", "stdout").Equal(t, out)
 	})
-	t.Run("with existing stderr", func(t *testing.T) {
+
+	t.Run("multiple stderr and exit", func(t *testing.T) {
 		t.Parallel()
 
 		cmd := exec.Command("bash", "-o", "pipefail", "-o", "errexit", "-c",
@@ -74,5 +74,16 @@ func TestError(t *testing.T) {
 		require.Error(t, err)
 		autogold.Want("get stderr in assigned buffer", "stderr\n").Equal(t, errBuf.String())
 		autogold.Want("got error with stderr as well", "exit status 1: stderr").Equal(t, err.Error())
+	})
+
+	t.Run("failed to start", func(t *testing.T) {
+		cmd := exec.Command("foobar")
+		stream, err := streamexec.Start(cmd)
+		assert.Error(t, err)
+		assert.NotNil(t, stream)
+
+		out, err := stream.String()
+		assert.NoError(t, err)
+		assert.Empty(t, out)
 	})
 }
