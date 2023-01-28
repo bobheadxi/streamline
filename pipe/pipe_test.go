@@ -12,6 +12,8 @@ import (
 )
 
 func TestStream(t *testing.T) {
+	t.Parallel()
+
 	w, s := NewStream()
 
 	input, size, _ := testdata.GenerateLargeInput(10)
@@ -28,6 +30,8 @@ func TestStream(t *testing.T) {
 }
 
 func TestBoundedStream(t *testing.T) {
+	t.Parallel()
+
 	w, s := NewBoundedStream()
 
 	input, size, _ := testdata.GenerateLargeInput(1)
@@ -44,6 +48,8 @@ func TestBoundedStream(t *testing.T) {
 }
 
 func TestWriterErrorCloser(t *testing.T) {
+	t.Parallel()
+
 	w, s := NewStream()
 	_, err := w.Write([]byte("foo\nbar"))
 	assert.NoError(t, err)

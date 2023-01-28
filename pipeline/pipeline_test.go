@@ -8,6 +8,8 @@ import (
 
 func TestMultiPipeline(t *testing.T) {
 	t.Run("empty", func(t *testing.T) {
+		t.Parallel()
+
 		p := MultiPipeline{}
 		assert.True(t, p.Inactive())
 
@@ -16,6 +18,8 @@ func TestMultiPipeline(t *testing.T) {
 	})
 
 	t.Run("all active", func(t *testing.T) {
+		t.Parallel()
+
 		p := MultiPipeline{
 			Filter(func(line []byte) bool { return false }),
 			Filter(func(line []byte) bool { return true }),
@@ -28,6 +32,8 @@ func TestMultiPipeline(t *testing.T) {
 	})
 
 	t.Run("some active", func(t *testing.T) {
+		t.Parallel()
+
 		p := MultiPipeline{
 			Filter(func(line []byte) bool { return false }),
 			Filter(nil),
@@ -41,6 +47,8 @@ func TestMultiPipeline(t *testing.T) {
 	})
 
 	t.Run("all inactive", func(t *testing.T) {
+		t.Parallel()
+
 		p := MultiPipeline{
 			Filter(nil),
 			Filter(nil),
@@ -53,6 +61,8 @@ func TestMultiPipeline(t *testing.T) {
 	})
 
 	t.Run("line skipping", func(t *testing.T) {
+		t.Parallel()
+
 		var map2called, map3called bool
 		p := MultiPipeline{
 			// Return empty slice, next pipeline should run

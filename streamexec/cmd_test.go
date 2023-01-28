@@ -13,18 +13,24 @@ import (
 )
 
 func TestRun(t *testing.T) {
-	cmd := exec.Command("echo", "hello world\nthis is a line\nand another line!")
-	stream, err := streamexec.Start(cmd) // should default to combined
-	require.NoError(t, err)
+	t.Run("default to Combined output", func(t *testing.T) {
+		t.Parallel()
 
-	out, err := stream.String()
-	require.NoError(t, err)
+		cmd := exec.Command("echo", "hello world\nthis is a line\nand another line!")
+		stream, err := streamexec.Start(cmd) // should default to combined
+		require.NoError(t, err)
 
-	autogold.Want("run output", `hello world
+		out, err := stream.String()
+		require.NoError(t, err)
+
+		autogold.Want("run output", `hello world
 this is a line
 and another line!`).Equal(t, out)
+	})
 
 	t.Run("WithPipeline", func(t *testing.T) {
+		t.Parallel()
+
 		cmd := exec.Command("echo", "hello world\nthis is a line\nand another line!")
 		stream, err := streamexec.Start(cmd, streamexec.Combined)
 		require.NoError(t, err)
@@ -42,6 +48,8 @@ and another line!`).Equal(t, out)
 
 func TestError(t *testing.T) {
 	t.Run("simple", func(t *testing.T) {
+		t.Parallel()
+
 		cmd := exec.Command("bash", "-o", "pipefail", "-o", "errexit", "-c",
 			`echo "stdout" ; sleep 0.001 ; >&2 echo "stderr" ; exit 1`)
 		stream, err := streamexec.Start(cmd, streamexec.Stdout|streamexec.ErrWithStderr)
@@ -53,6 +61,8 @@ func TestError(t *testing.T) {
 		autogold.Want("get only stdout", "stdout").Equal(t, out)
 	})
 	t.Run("with existing stderr", func(t *testing.T) {
+		t.Parallel()
+
 		cmd := exec.Command("bash", "-o", "pipefail", "-o", "errexit", "-c",
 			`echo "stdout" ; sleep 0.001 ; >&2 echo "stderr" ; exit 1`)
 		var errBuf bytes.Buffer

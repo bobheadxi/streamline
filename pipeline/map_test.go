@@ -9,6 +9,8 @@ import (
 
 func TestMap(t *testing.T) {
 	t.Run("active", func(t *testing.T) {
+		t.Parallel()
+
 		p := Map(func(line []byte) []byte { return nil })
 		assert.False(t, p.Inactive())
 
@@ -18,6 +20,8 @@ func TestMap(t *testing.T) {
 	})
 
 	t.Run("inactive", func(t *testing.T) {
+		t.Parallel()
+
 		p := Map(nil)
 		assert.True(t, p.Inactive())
 
@@ -29,6 +33,8 @@ func TestMap(t *testing.T) {
 
 func TestErrMap(t *testing.T) {
 	t.Run("active", func(t *testing.T) {
+		t.Parallel()
+
 		p := MapErr(func(line []byte) ([]byte, error) { return line, errors.New("foo") })
 		assert.False(t, p.Inactive())
 
@@ -38,6 +44,8 @@ func TestErrMap(t *testing.T) {
 	})
 
 	t.Run("inactive", func(t *testing.T) {
+		t.Parallel()
+
 		p := MapErr(nil)
 		assert.True(t, p.Inactive())
 

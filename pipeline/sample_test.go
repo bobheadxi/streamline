@@ -12,19 +12,27 @@ import (
 )
 
 func TestSample(t *testing.T) {
-	stream := streamline.New(strings.NewReader("foo bar baz\nbaz bar\nhello world\ngoodbye world")).
-		WithPipeline(pipeline.Sample(2))
+	t.Run("sample stream", func(t *testing.T) {
+		t.Parallel()
 
-	lines, err := stream.Lines()
-	require.NoError(t, err)
-	autogold.Want("sampled 2", []string{"baz bar", "goodbye world"}).Equal(t, lines)
+		stream := streamline.New(strings.NewReader("foo bar baz\nbaz bar\nhello world\ngoodbye world")).
+			WithPipeline(pipeline.Sample(2))
+
+		lines, err := stream.Lines()
+		require.NoError(t, err)
+		autogold.Want("sampled 2", []string{"baz bar", "goodbye world"}).Equal(t, lines)
+	})
 
 	t.Run("active", func(t *testing.T) {
+		t.Parallel()
+
 		s := pipeline.Sample(2)
 		assert.False(t, s.Inactive())
 	})
 
 	t.Run("inactive", func(t *testing.T) {
+		t.Parallel()
+
 		s := pipeline.Sample(0)
 		assert.True(t, s.Inactive())
 

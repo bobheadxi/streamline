@@ -8,7 +8,11 @@ import (
 
 func TestFilter(t *testing.T) {
 	t.Run("active", func(t *testing.T) {
+		t.Parallel()
+
 		t.Run("drop line", func(t *testing.T) {
+			t.Parallel()
+
 			p := Filter(func(line []byte) bool { return false })
 			assert.False(t, p.Inactive())
 
@@ -18,6 +22,8 @@ func TestFilter(t *testing.T) {
 		})
 
 		t.Run("keep line", func(t *testing.T) {
+			t.Parallel()
+
 			p := Filter(func(line []byte) bool { return true })
 			assert.False(t, p.Inactive())
 
@@ -29,6 +35,8 @@ func TestFilter(t *testing.T) {
 	})
 
 	t.Run("inactive", func(t *testing.T) {
+		t.Parallel()
+
 		p := Filter(nil)
 		assert.True(t, p.Inactive())
 

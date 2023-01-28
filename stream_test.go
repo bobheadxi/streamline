@@ -71,6 +71,9 @@ func TestStream(t *testing.T) {
 		},
 	} {
 		t.Run(tc.want.Name(), func(t *testing.T) {
+			tc := tc
+			t.Parallel()
+
 			got, err := tc.generate(newStream())
 			if tc.wantErr {
 				require.Error(t, err)
@@ -159,6 +162,9 @@ func TestStreamWithPipeline(t *testing.T) {
 		},
 	} {
 		t.Run(tc.want.Name(), func(t *testing.T) {
+			tc := tc
+			t.Parallel()
+
 			got, err := tc.generate(newStream())
 			if tc.wantErr {
 				require.Error(t, err)
@@ -173,6 +179,8 @@ func TestStreamWithPipeline(t *testing.T) {
 
 func TestStreamReader(t *testing.T) {
 	t.Run("no Pipeline", func(t *testing.T) {
+		t.Parallel()
+
 		stream := streamline.New(strings.NewReader("foo bar baz\nbaz bar\nhello world"))
 
 		p := make([]byte, 5)
@@ -199,6 +207,8 @@ func TestStreamReader(t *testing.T) {
 	})
 
 	t.Run("WithPipeline", func(t *testing.T) {
+		t.Parallel()
+
 		stream := streamline.New(strings.NewReader("foo bar baz\nbaz bar\nhello world")).
 			WithPipeline(pipeline.Map(func(line []byte) []byte {
 				return bytes.ReplaceAll(line, []byte{' '}, []byte{'-'})

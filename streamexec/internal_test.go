@@ -44,6 +44,9 @@ func TestModeSet(t *testing.T) {
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
+			tc := tc
+			t.Parallel()
+
 			m := tc.modes.getMode()
 			assert.Equal(t, tc.wantMode, m)
 			for _, want := range tc.wantModeMatches {
