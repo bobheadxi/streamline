@@ -241,6 +241,32 @@ func TestStreamReader(t *testing.T) {
 		assert.Zero(t, len(all))
 		assert.NoError(t, err)
 	})
+
+	t.Run("with all lines skipped", func(t *testing.T) {
+		t.Parallel()
+
+		stream := streamline.New(strings.NewReader("foo bar baz\nbaz bar\nhello world")).
+			WithPipeline(pipeline.Map(func(line []byte) []byte {
+				return nil
+			}))
+
+		// Correctly read nothing
+		all, err := io.ReadAll(stream)
+		assert.Zero(t, len(all))
+		assert.NoError(t, err)
+	})
+
+	t.Run("with some lines skipped", func(t *testing.T) {
+		t.Parallel()
+
+		stream := streamline.New(strings.NewReader("foo bar baz\nbaz bar\nhello world")).
+			WithPipeline(pipeline.Sample(2)) // only line 2 will stay
+
+		// Correctly read nothing
+		all, err := io.ReadAll(stream)
+		assert.NoError(t, err)
+		autogold.Want("read with some line skipped", "baz bar\n").Equal(t, string(all))
+	})
 }
 
 func TestStreamWithLineSeparator(t *testing.T) {
