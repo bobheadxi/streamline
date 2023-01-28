@@ -51,4 +51,29 @@ func TestMultiPipeline(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, string(line), "foo")
 	})
+
+	t.Run("line skipping", func(t *testing.T) {
+		var map2called, map3called bool
+		p := MultiPipeline{
+			// Return empty slice, next pipeline should run
+			Map(func(line []byte) []byte { return []byte{} }),
+			// Return nil slice, next pipeline should not run
+			Map(func(line []byte) []byte {
+				map2called = true
+				return nil
+			}),
+			Map(func(line []byte) []byte {
+				map3called = true
+				return line
+			}),
+		}
+		assert.False(t, p.Inactive())
+
+		line, err := p.ProcessLine([]byte("foo"))
+		assert.NoError(t, err)
+		assert.Nil(t, line)
+
+		assert.True(t, map2called)
+		assert.False(t, map3called)
+	})
 }

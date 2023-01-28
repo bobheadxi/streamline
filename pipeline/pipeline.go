@@ -42,8 +42,11 @@ func (mp MultiPipeline) ProcessLine(line []byte) ([]byte, error) {
 		if err != nil {
 			break
 		}
-		if len(line) == 0 {
-			break // nothing to pass on to next pipeline
+		// If the line returned is nil, we have nothing to pass on to next pipeline, since
+		// nil indicates we should skip the line entirely. A zero-length line is still
+		// valid and should still be provided to the next processor.
+		if line == nil {
+			break
 		}
 	}
 	return line, err
