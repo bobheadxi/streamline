@@ -1,6 +1,7 @@
 package pipeline
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -85,5 +86,25 @@ func TestMultiPipeline(t *testing.T) {
 
 		assert.True(t, map2called)
 		assert.False(t, map3called)
+	})
+
+	t.Run("error handling", func(t *testing.T) {
+		t.Parallel()
+
+		var map2called bool
+		p := MultiPipeline{
+			MapErr(func(line []byte) ([]byte, error) { return line, errors.New("oh no") }),
+			Map(func(line []byte) []byte {
+				map2called = true
+				return nil
+			}),
+		}
+		assert.False(t, p.Inactive())
+
+		line, err := p.ProcessLine([]byte("foo"))
+		assert.Error(t, err)
+		assert.NotEmpty(t, line)
+
+		assert.False(t, map2called)
 	})
 }
