@@ -35,6 +35,9 @@ func TestSample(t *testing.T) {
 
 		s := pipeline.Sample(0)
 		assert.True(t, s.Inactive())
+		line, err := s.ProcessLine([]byte("foobar"))
+		assert.NoError(t, err)
+		assert.NotEmpty(t, line)
 
 		s = pipeline.Sample(1)
 		assert.True(t, s.Inactive())

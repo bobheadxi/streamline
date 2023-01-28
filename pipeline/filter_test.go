@@ -44,5 +44,4 @@ func TestFilter(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, string(line), "foo")
 	})
-
 }

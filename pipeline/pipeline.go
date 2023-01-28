@@ -13,7 +13,8 @@ type Pipeline interface {
 	// ProcessLine returns a modified, unmodified, or omitted line. To omit a line, return
 	// a nil []byte - an empty []byte will cause an empty line to be retained.
 	//
-	// Implementations must not retain line.
+	// Implementations must not retain line, and must return the line unmodified if the
+	// Pipeline is inactive.
 	ProcessLine(line []byte) ([]byte, error)
 }
 
@@ -22,6 +23,7 @@ type MultiPipeline []Pipeline
 
 var _ Pipeline = (MultiPipeline)(nil)
 
+// Inactive returns true if all pipelines in the MultiPipeline are inactive.
 func (mp MultiPipeline) Inactive() bool {
 	var active bool
 	for _, p := range mp {
@@ -32,6 +34,9 @@ func (mp MultiPipeline) Inactive() bool {
 	return !active
 }
 
+// ProcessLine will provide the line to all active pipelines in the MultiPipeline in
+// serial, passing the result of each pipeline to the next. If any pipeline indicates a
+// line should be skipped by returning a nil line, then ProcessLine returns immediately.
 func (mp MultiPipeline) ProcessLine(line []byte) ([]byte, error) {
 	var err error
 	for _, p := range mp {

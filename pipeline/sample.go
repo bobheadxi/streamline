@@ -24,6 +24,9 @@ func Sample(n int) *Sampler {
 func (s *Sampler) Inactive() bool { return s == nil || s.N <= 1 }
 
 func (s *Sampler) ProcessLine(line []byte) ([]byte, error) {
+	if s.Inactive() {
+		return line, nil
+	}
 	s.current += 1
 	if s.current%s.N == 0 {
 		s.current = 0
