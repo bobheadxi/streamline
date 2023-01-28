@@ -77,6 +77,8 @@ and another line!`).Equal(t, out)
 	})
 
 	t.Run("failed to start", func(t *testing.T) {
+		t.Parallel()
+
 		cmd := exec.Command("foobar")
 		stream, err := streamexec.Start(cmd)
 		assert.Error(t, err)
