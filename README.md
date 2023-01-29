@@ -167,6 +167,61 @@ func PrintEvery10th(r io.Reader) error {
 </tr>
 </table>
 
+### Transform specific lines
+
+This particular example is a somewhat realistic one - [GCP Cloud SQL cannot accept `pgdump` output that contains certain `EXTENSION`-related statements](https://cloud.google.com/sql/docs/postgres/import-export/import-export-dmp#external-server), so to `pgdump` a PostgreSQL database and upload the dump in a bucket for import into Cloud SQL, one must pre-process their dumps to remove offending statements.
+
+<table>
+<tr>
+  <th><code>bufio.Scanner</code></th>
+  <th><code>streamline</code></th>
+</tr>
+<tr>
+<td>
+
+```go
+func Upload(pgdump *os.File, upload io.Writer) error {
+    s := bufio.NewScanner(pgdump)
+    for s.Scan() {
+        line := s.Bytes()
+        var err error
+        if bytes.Contains(line, []byte("COMMENT ON EXTENSION")) {
+            // comment out this line
+            _, err = upload.Write(append([]byte("-- "), line...))
+        } else {
+            _, err = upload.Write(line)
+        }
+        if err != nil {
+            return err
+        }
+    }
+    return s.Err()
+}
+```
+
+</td>
+
+<td>
+
+```go
+func Upload(pgdump *os.File, upload io.Writer) error {
+    _, err := streamline.New(pgdump).
+        WithPipeline(pipeline.Map(func(line []byte) []byte {
+            if bytes.Contains(line, []byte("COMMENT ON EXTENSION")) {
+                // comment out this line
+                return append([]byte("-- "), line...)
+            }
+            return line
+        })).
+        WriteTo(upload)
+    return err
+}
+```
+
+</td>
+</tr>
+</table>
+
 ## Background
 
 Some of the ideas in this package started in [`sourcegraph/run`](https://github.com/sourcegraph/run), where we were trying to build utilities that [made it easier to write bash-esque scripts using Go](https://github.com/sourcegraph/sourcegraph/blob/main/doc/dev/adr/1652433602-use-go-for-scripting.md), namely being able to do things you would often to in scripts such as grepping and iterating over lines. `streamline` generalizes on the ideas for working with newline-delimited data to work for arbitrary inputs.
