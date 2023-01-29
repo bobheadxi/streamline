@@ -35,7 +35,7 @@ When working with data streams in Go, you typically get an `io.Reader`, which is
 <td>
 
 ```go
-func PrefixCommandOutput(cmd *exec.Cmd) error {
+func PrefixOutput(cmd *exec.Cmd) error {
     reader, writer := io.Pipe()
     cmd.Stdout = writer
     cmd.Stderr = writer
@@ -48,11 +48,11 @@ func PrefixCommandOutput(cmd *exec.Cmd) error {
         writer.Close()
         errC <- err
     }()
-    scanner := bufio.NewScanner(reader)
-    for scanner.Scan() {
-        println("PREFIX: ", scanner.Text())
+    s := bufio.NewScanner(reader)
+    for s.Scan() {
+        println("PREFIX: ", s.Text())
     }
-    if err := scanner.Err(); err != nil {
+    if err := s.Err(); err != nil {
         return err
     }
     return <-errC
@@ -63,7 +63,7 @@ func PrefixCommandOutput(cmd *exec.Cmd) error {
 <td>
 
 ```go
-func PrefixCommandOutput(cmd *exec.Cmd) error {
+func PrefixOutput(cmd *exec.Cmd) error {
     stream, err := streamexec.Start(cmd)
     if err != nil {
         return err
@@ -90,11 +90,11 @@ func PrefixCommandOutput(cmd *exec.Cmd) error {
 
 ```go
 func GetMessages(r io.Reader) error {
-    scanner := bufio.NewScanner(r)
-    for scanner.Scan() {
+    s := bufio.NewScanner(r)
+    for s.Scan() {
         var result bytes.Buffer
         cmd := exec.Command("jq", ".msg")
-        cmd.Stdin = bytes.NewReader(scanner.Bytes())
+        cmd.Stdin = bytes.NewReader(s.Bytes())
         cmd.Stdout = &result
         if err := cmd.Run(); err != nil {
             return err
@@ -102,7 +102,7 @@ func GetMessages(r io.Reader) error {
         line := result.String()
         println(strings.TrimSuffix(line, "\n"))
     }
-    return scanner.Err()
+    return s.Err()
 }
 ```
 
@@ -136,16 +136,16 @@ func GetMessages(r io.Reader) error {
 
 ```go
 func PrintEvery10th(r io.Reader) error {
-    scanner := bufio.NewScanner(r)
+    s := bufio.NewScanner(r)
     var count int
-    for scanner.Scan() {
+    for s.Scan() {
         count++
         if count%10 != 0 {
             continue
         }
-        println(scanner.Text())
+        println(s.Text())
     }
-    return scanner.Err()
+    return s.Err()
 }
 ```
 
@@ -180,16 +180,19 @@ This particular example is a somewhat realistic one - [GCP Cloud SQL cannot acce
 <td>
 
 ```go
-func Upload(pgdump *os.File, upload io.Writer) error {
+var unwanted = []byte("COMMENT ON EXTENSION")
+
+func Upload(pgdump *os.File, dst io.Writer) error {
     s := bufio.NewScanner(pgdump)
     for s.Scan() {
         line := s.Bytes()
         var err error
-        if bytes.Contains(line, []byte("COMMENT ON EXTENSION")) {
-            // comment out this line
-            _, err = upload.Write(append([]byte("-- "), line...))
+        if bytes.Contains(line, unwanted) {
+            _, err = dst.Write(
+                // comment out this line
+                append([]byte("-- "), line...))
         } else {
-            _, err = upload.Write(line)
+            _, err = dst.Write(line)
         }
         if err != nil {
             return err
@@ -204,16 +207,18 @@ func Upload(pgdump *os.File, upload io.Writer) error {
 <td>
 
 ```go
-func Upload(pgdump *os.File, upload io.Writer) error {
+var unwanted = []byte("COMMENT ON EXTENSION")
+
+func Upload(pgdump *os.File, dst io.Writer) error {
     _, err := streamline.New(pgdump).
         WithPipeline(pipeline.Map(func(line []byte) []byte {
-            if bytes.Contains(line, []byte("COMMENT ON EXTENSION")) {
+            if bytes.Contains(line, unwanted) {
                 // comment out this line
                 return append([]byte("-- "), line...)
             }
             return line
         })).
-        WriteTo(upload)
+        WriteTo(dst)
     return err
 }
 ```
