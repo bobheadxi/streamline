@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hexops/autogold"
+	"github.com/hexops/autogold/v2"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.bobheadxi.dev/streamline"
@@ -18,7 +18,7 @@ func TestPipeline(t *testing.T) {
 		l, err := p.ProcessLine([]byte(`{"foo":"bar"}`))
 		assert.Empty(t, l)
 		require.Error(t, err)
-		autogold.Want("invalid query error", `jq.Parse: unexpected token "{"`).Equal(t, err.Error())
+		autogold.Expect(`jq.Parse: unexpected token "{"`).Equal(t, err.Error())
 	})
 
 	t.Run("query error", func(t *testing.T) {
@@ -28,7 +28,7 @@ func TestPipeline(t *testing.T) {
 		l, err := p.ProcessLine([]byte(`{"foo":bar}`))
 		assert.Empty(t, l)
 		require.Error(t, err)
-		autogold.Want("query failed error", `json: invalid character 'b' looking for beginning of value: {"foo":bar}`).Equal(t, err.Error())
+		autogold.Expect(`json: invalid character 'b' looking for beginning of value: {"foo":bar}`).Equal(t, err.Error())
 	})
 
 	t.Run("ok", func(t *testing.T) {

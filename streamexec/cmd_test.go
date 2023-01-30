@@ -5,7 +5,7 @@ import (
 	"os/exec"
 	"testing"
 
-	"github.com/hexops/autogold"
+	"github.com/hexops/autogold/v2"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -24,7 +24,7 @@ func TestRun(t *testing.T) {
 		out, err := stream.String()
 		require.NoError(t, err)
 
-		autogold.Want("run output", `hello world
+		autogold.Expect(`hello world
 this is a line
 and another line!`).Equal(t, out)
 	})
@@ -43,7 +43,7 @@ and another line!`).Equal(t, out)
 			String()
 		require.NoError(t, err)
 
-		autogold.Want("run output with pipeline", "this is a line\nand another line!").Equal(t, out)
+		autogold.Expect("this is a line\nand another line!").Equal(t, out)
 	})
 
 	t.Run("stderr and exit", func(t *testing.T) {
@@ -56,8 +56,8 @@ and another line!`).Equal(t, out)
 
 		out, err := stream.String()
 		require.Error(t, err)
-		autogold.Want("got error with stderr", "exit status 1: stderr").Equal(t, err.Error())
-		autogold.Want("get only stdout", "stdout").Equal(t, out)
+		autogold.Expect("exit status 1: stderr").Equal(t, err.Error())
+		autogold.Expect("stdout").Equal(t, out)
 	})
 
 	t.Run("multiple stderr and exit", func(t *testing.T) {
@@ -72,8 +72,8 @@ and another line!`).Equal(t, out)
 
 		_, err = stream.String()
 		require.Error(t, err)
-		autogold.Want("get stderr in assigned buffer", "stderr\n").Equal(t, errBuf.String())
-		autogold.Want("got error with stderr as well", "exit status 1: stderr").Equal(t, err.Error())
+		autogold.Expect("stderr\n").Equal(t, errBuf.String())
+		autogold.Expect("exit status 1: stderr").Equal(t, err.Error())
 	})
 
 	t.Run("failed to start", func(t *testing.T) {

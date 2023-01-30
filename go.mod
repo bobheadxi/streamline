@@ -5,7 +5,7 @@ go 1.19
 require (
 	github.com/djherbis/buffer v1.2.0
 	github.com/djherbis/nio/v3 v3.0.1
-	github.com/hexops/autogold v1.3.1
+	github.com/hexops/autogold/v2 v2.0.3
 	github.com/itchyny/gojq v0.12.11
 	github.com/stretchr/testify v1.8.1
 	go.bobheadxi.dev/gobenchdata v1.3.1

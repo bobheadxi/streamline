@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hexops/autogold"
+	"github.com/hexops/autogold/v2"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.bobheadxi.dev/streamline"
@@ -20,7 +20,7 @@ func TestSample(t *testing.T) {
 
 		lines, err := stream.Lines()
 		require.NoError(t, err)
-		autogold.Want("sampled 2", []string{"baz bar", "goodbye world"}).Equal(t, lines)
+		autogold.Expect([]string{"baz bar", "goodbye world"}).Equal(t, lines)
 	})
 
 	t.Run("active", func(t *testing.T) {
