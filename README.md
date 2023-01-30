@@ -5,7 +5,7 @@
 [![Go Report Card](https://goreportcard.com/badge/go.bobheadxi.dev/streamline)](https://goreportcard.com/report/go.bobheadxi.dev/streamline)
 [![benchmarks](https://img.shields.io/website/https/bobheadxi.dev/streamline.svg?down_color=red&down_message=offline&label=benchmarks&up_message=live)](https://bobheadxi.dev/streamline)
 
-Handle your data, line by line.
+Transform and handle your data, line by line.
 
 ```sh
 go get go.bobheadxi.dev/streamline
