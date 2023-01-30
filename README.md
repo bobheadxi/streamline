@@ -99,8 +99,7 @@ func GetMessages(r io.Reader) error {
         if err := cmd.Run(); err != nil {
             return err
         }
-        line := result.String()
-        println(strings.TrimSuffix(line, "\n"))
+        print(result.String())
     }
     return s.Err()
 }
