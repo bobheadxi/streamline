@@ -10,6 +10,8 @@ import (
 
 func TestQuery(t *testing.T) {
 	t.Run("invalid query", func(t *testing.T) {
+		t.Parallel()
+
 		s := streamline.New(strings.NewReader(`{
 			"foo":"bar"
 		}`))
@@ -19,6 +21,8 @@ func TestQuery(t *testing.T) {
 	})
 
 	t.Run("ok", func(t *testing.T) {
+		t.Parallel()
+
 		s := streamline.New(strings.NewReader(`{
 			"foo":"bar"
 		}`))

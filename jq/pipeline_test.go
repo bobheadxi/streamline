@@ -10,6 +10,8 @@ import (
 
 func TestPipeline(t *testing.T) {
 	t.Run("invalid query", func(t *testing.T) {
+		t.Parallel()
+
 		p := Pipeline("asdf{")
 		assert.False(t, p.Inactive())
 
@@ -20,6 +22,8 @@ func TestPipeline(t *testing.T) {
 	})
 
 	t.Run("query error", func(t *testing.T) {
+		t.Parallel()
+
 		p := Pipeline(".baz[4]")
 		assert.False(t, p.Inactive())
 
@@ -30,6 +34,8 @@ func TestPipeline(t *testing.T) {
 	})
 
 	t.Run("ok", func(t *testing.T) {
+		t.Parallel()
+
 		p := Pipeline(".foo")
 		assert.False(t, p.Inactive())
 
@@ -39,6 +45,8 @@ func TestPipeline(t *testing.T) {
 	})
 
 	t.Run("skip empty line", func(t *testing.T) {
+		t.Parallel()
+
 		p := Pipeline(".foo")
 		assert.False(t, p.Inactive())
 
