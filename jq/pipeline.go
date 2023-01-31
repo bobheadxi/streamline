@@ -1,18 +1,18 @@
 package jq
 
 import (
-	"bytes"
 	"context"
 	"fmt"
-	"io"
 
 	"go.bobheadxi.dev/streamline/pipeline"
 )
 
 // Pipeline builds a JQ query for a pipeline that runs the query against each line and
-// maps the result to the output.
+// maps the result to the output. If the query fails to build, Pipeline will return a
+// pipeline that returns an error immediately on read - to handle query build errors, use
+// BuildPipeline instead.
 //
-// Internally, it uses github.com/itchyny/gojq
+// Internally, Pipeline uses github.com/itchyny/gojq to build and run the query.
 func Pipeline(query string) pipeline.Pipeline {
 	return PipelineContext(context.Background(), query)
 }
@@ -20,11 +20,23 @@ func Pipeline(query string) pipeline.Pipeline {
 // PipelineContext is the same as Pipeline, but runs the generated JQ code in the given
 // context.
 func PipelineContext(ctx context.Context, query string) pipeline.Pipeline {
-	jqCode, err := buildJQ(query)
+	p, err := BuildPipeline(ctx, query)
 	if err != nil {
 		return pipeline.MapErr(func(line []byte) ([]byte, error) { return nil, err })
 	}
+	return p
+}
 
+// Pipeline safely builds a pipeline that runs the JQ query against each line and maps the
+// result to the output, returning an error if the query fails to build. The generated JQ
+// code is run in the given context.
+//
+// Internally, BuildPipeline uses github.com/itchyny/gojq to build and run the query.
+func BuildPipeline(ctx context.Context, query string) (pipeline.Pipeline, error) {
+	jqCode, err := buildJQ(query)
+	if err != nil {
+		return nil, err
+	}
 	return pipeline.MapErr(func(line []byte) ([]byte, error) {
 		if len(line) == 0 {
 			return line, nil
@@ -35,28 +47,5 @@ func PipelineContext(ctx context.Context, query string) pipeline.Pipeline {
 			return nil, fmt.Errorf("%w: %s", err, string(line))
 		}
 		return result, nil
-	})
-}
-
-// Query is a utility for building and executing a JQ query against some data, such as a
-// streamline.Stream instance.
-//
-// Internally, it uses github.com/itchyny/gojq
-func Query(data io.Reader, query string) ([]byte, error) {
-	return QueryContext(context.Background(), data, query)
-}
-
-// QueryContext is the same as Query, but runs the generated JQ code in the given context.
-func QueryContext(ctx context.Context, data io.Reader, query string) ([]byte, error) {
-	jqCode, err := buildJQ(query)
-	if err != nil {
-		return nil, err
-	}
-
-	var b bytes.Buffer
-	if _, err := io.Copy(&b, data); err != nil {
-		return nil, err
-	}
-
-	return execJQ(ctx, jqCode, b.Bytes())
+	}), nil
 }

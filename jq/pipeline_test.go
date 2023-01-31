@@ -1,13 +1,11 @@
 package jq
 
 import (
-	"strings"
 	"testing"
 
 	"github.com/hexops/autogold/v2"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.bobheadxi.dev/streamline"
 )
 
 func TestPipeline(t *testing.T) {
@@ -47,25 +45,5 @@ func TestPipeline(t *testing.T) {
 		l, err := p.ProcessLine([]byte{})
 		assert.NoError(t, err)
 		assert.Equal(t, ``, string(l))
-	})
-}
-
-func TestQuery(t *testing.T) {
-	t.Run("invalid query", func(t *testing.T) {
-		s := streamline.New(strings.NewReader(`{
-			"foo":"bar"
-		}`))
-		res, err := Query(s, ".foo{")
-		assert.Error(t, err)
-		assert.Empty(t, res)
-	})
-
-	t.Run("ok", func(t *testing.T) {
-		s := streamline.New(strings.NewReader(`{
-			"foo":"bar"
-		}`))
-		res, err := Query(s, ".foo")
-		assert.NoError(t, err)
-		assert.Equal(t, `"bar"`, string(res))
 	})
 }
