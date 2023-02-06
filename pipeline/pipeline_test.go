@@ -12,10 +12,9 @@ func TestMultiPipeline(t *testing.T) {
 		t.Parallel()
 
 		p := MultiPipeline{}
-		assert.True(t, p.Inactive())
-
-		p = nil
-		assert.True(t, p.Inactive())
+		line, err := p.ProcessLine([]byte("foo"))
+		assert.NoError(t, err)
+		assert.NotNil(t, line)
 	})
 
 	t.Run("all active", func(t *testing.T) {
@@ -25,7 +24,6 @@ func TestMultiPipeline(t *testing.T) {
 			Filter(func(line []byte) bool { return false }),
 			Filter(func(line []byte) bool { return true }),
 		}
-		assert.False(t, p.Inactive())
 
 		line, err := p.ProcessLine([]byte("foo"))
 		assert.NoError(t, err)
@@ -40,25 +38,10 @@ func TestMultiPipeline(t *testing.T) {
 			Filter(nil),
 			Filter(func(line []byte) bool { return true }),
 		}
-		assert.False(t, p.Inactive())
 
 		line, err := p.ProcessLine([]byte("foo"))
 		assert.NoError(t, err)
 		assert.Empty(t, line)
-	})
-
-	t.Run("all inactive", func(t *testing.T) {
-		t.Parallel()
-
-		p := MultiPipeline{
-			Filter(nil),
-			Filter(nil),
-		}
-		assert.True(t, p.Inactive())
-
-		line, err := p.ProcessLine([]byte("foo"))
-		assert.NoError(t, err)
-		assert.Equal(t, string(line), "foo")
 	})
 
 	t.Run("line skipping", func(t *testing.T) {
@@ -78,7 +61,6 @@ func TestMultiPipeline(t *testing.T) {
 				return line
 			}),
 		}
-		assert.False(t, p.Inactive())
 
 		line, err := p.ProcessLine([]byte("foo"))
 		assert.NoError(t, err)
@@ -99,7 +81,6 @@ func TestMultiPipeline(t *testing.T) {
 				return nil
 			}),
 		}
-		assert.False(t, p.Inactive())
 
 		line, err := p.ProcessLine([]byte("foo"))
 		assert.Error(t, err)

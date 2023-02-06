@@ -147,11 +147,6 @@ var _ io.WriterTo = (*Stream)(nil)
 // WriteTo writes processed data to dst. It allows Stream to effectively implement io.Copy
 // handling.
 func (s *Stream) WriteTo(dst io.Writer) (int64, error) {
-	if s.pipeline.Inactive() {
-		// Happy path, do a straight read from the underlying source
-		return s.reader.WriteTo(dst)
-	}
-
 	var totalWritten int64
 	return totalWritten, s.StreamBytes(func(line []byte) error {
 		n, err := dst.Write(append(line, s.lineSeparator))
@@ -165,11 +160,6 @@ var _ io.Reader = (*Stream)(nil)
 // Read populates p with processed data. It allows Stream to effectively be compatible
 // with anything that accepts an io.Reader.
 func (s *Stream) Read(p []byte) (int, error) {
-	if s.pipeline.Inactive() {
-		// Happy path, do a straight read
-		return s.reader.Read(p)
-	}
-
 	if s.readBuffer == nil {
 		s.readBuffer = &bytes.Buffer{}
 	}

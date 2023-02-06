@@ -6,12 +6,7 @@ type Filter func(line []byte) bool
 
 var _ Pipeline = (Filter)(nil)
 
-func (f Filter) Inactive() bool { return f == nil }
-
 func (f Filter) ProcessLine(line []byte) ([]byte, error) {
-	if f.Inactive() {
-		return line, nil
-	}
 	if f(line) {
 		return line, nil
 	}

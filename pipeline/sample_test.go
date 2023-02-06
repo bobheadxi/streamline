@@ -23,26 +23,31 @@ func TestSample(t *testing.T) {
 		autogold.Expect([]string{"baz bar", "goodbye world"}).Equal(t, lines)
 	})
 
-	t.Run("active", func(t *testing.T) {
-		t.Parallel()
-
-		s := pipeline.Sample(2)
-		assert.False(t, s.Inactive())
-	})
-
-	t.Run("inactive", func(t *testing.T) {
+	t.Run("never sample", func(t *testing.T) {
 		t.Parallel()
 
 		s := pipeline.Sample(0)
-		assert.True(t, s.Inactive())
-		line, err := s.ProcessLine([]byte("foobar"))
+		line, err := s.ProcessLine([]byte("foo"))
 		assert.NoError(t, err)
-		assert.NotEmpty(t, line)
+		assert.Nil(t, line)
 
-		s = pipeline.Sample(1)
-		assert.True(t, s.Inactive())
+	})
 
-		s = pipeline.Sample(-1)
-		assert.True(t, s.Inactive())
+	t.Run("always sample", func(t *testing.T) {
+		t.Parallel()
+
+		s := pipeline.Sample(1)
+		line, err := s.ProcessLine([]byte("foo"))
+		assert.NoError(t, err)
+		assert.NotNil(t, line)
+	})
+
+	t.Run("invalid sampling", func(t *testing.T) {
+		t.Parallel()
+
+		s := pipeline.Sample(-1)
+		line, err := s.ProcessLine([]byte("foo"))
+		assert.Error(t, err)
+		assert.Nil(t, line)
 	})
 }

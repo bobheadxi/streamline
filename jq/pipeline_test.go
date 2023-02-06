@@ -13,7 +13,6 @@ func TestPipeline(t *testing.T) {
 		t.Parallel()
 
 		p := Pipeline("asdf{")
-		assert.False(t, p.Inactive())
 
 		l, err := p.ProcessLine([]byte(`{"foo":"bar"}`))
 		assert.Empty(t, l)
@@ -25,7 +24,6 @@ func TestPipeline(t *testing.T) {
 		t.Parallel()
 
 		p := Pipeline(".baz[4]")
-		assert.False(t, p.Inactive())
 
 		l, err := p.ProcessLine([]byte(`{"foo":bar}`))
 		assert.Empty(t, l)
@@ -37,7 +35,6 @@ func TestPipeline(t *testing.T) {
 		t.Parallel()
 
 		p := Pipeline(".foo")
-		assert.False(t, p.Inactive())
 
 		l, err := p.ProcessLine([]byte(`{"foo":"bar"}`))
 		assert.NoError(t, err)
@@ -48,7 +45,6 @@ func TestPipeline(t *testing.T) {
 		t.Parallel()
 
 		p := Pipeline(".foo")
-		assert.False(t, p.Inactive())
 
 		l, err := p.ProcessLine([]byte{})
 		assert.NoError(t, err)

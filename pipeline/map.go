@@ -6,12 +6,7 @@ type Map func(line []byte) []byte
 
 var _ Pipeline = (Map)(nil)
 
-func (m Map) Inactive() bool { return m == nil }
-
 func (m Map) ProcessLine(line []byte) ([]byte, error) {
-	if m.Inactive() {
-		return line, nil
-	}
 	return m(line), nil
 }
 
@@ -24,11 +19,6 @@ type MapErr func(line []byte) ([]byte, error)
 
 var _ Pipeline = (MapErr)(nil)
 
-func (m MapErr) Inactive() bool { return m == nil }
-
 func (m MapErr) ProcessLine(line []byte) ([]byte, error) {
-	if m.Inactive() {
-		return line, nil
-	}
 	return m(line)
 }
