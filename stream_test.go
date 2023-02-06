@@ -219,13 +219,13 @@ func TestStreamReader(t *testing.T) {
 			n, err := stream.Read(p)
 			assert.NoError(t, err)
 			assert.NotZero(t, n)
-			autogold.Expect("z\n").Equal(t, string(p[:n]))
+			autogold.Expect("z\nbaz").Equal(t, string(p[:n]))
 		})
 
 		t.Run("remaining", func(t *testing.T) {
 			all, err := io.ReadAll(stream)
 			assert.NoError(t, err)
-			autogold.Expect("baz bar\nhello world\n").Equal(t, string(all))
+			autogold.Expect(" bar\nhello world\n").Equal(t, string(all))
 		})
 
 		t.Run("read on empty input", func(t *testing.T) {
@@ -264,13 +264,13 @@ func TestStreamReader(t *testing.T) {
 			n, err := stream.Read(p)
 			assert.NoError(t, err)
 			assert.NotZero(t, n)
-			autogold.Expect("z\n").Equal(t, string(p[:n])) // TODO
+			autogold.Expect("z\nbaz").Equal(t, string(p[:n]))
 		})
 
 		t.Run("remaining", func(t *testing.T) {
 			all, err := io.ReadAll(stream)
 			assert.NoError(t, err)
-			autogold.Expect("baz-bar\nhello-world\n").Equal(t, string(all))
+			autogold.Expect("-bar\nhello-world\n").Equal(t, string(all))
 		})
 
 		t.Run("read on empty input", func(t *testing.T) {

@@ -165,10 +165,15 @@ func (s *Stream) Read(p []byte) (int, error) {
 		s.readBuffer = &bytes.Buffer{}
 	}
 
-	// If we have unread data, read it.
+	// If we have unread data, read it. Only return if and only if this fills p, otherwise
+	// continue with line read.
+	var written int
 	if s.readBuffer.Len() > 0 {
-		written, _ := s.readBuffer.Read(p)
-		return written, nil
+		// Buffer read can only error with io.EOF, so we just discard it.
+		written, _ = s.readBuffer.Read(p)
+		if written == len(p) {
+			return written, nil
+		}
 	}
 
 	// Unread data has been read - we can reset the buffer now.
@@ -176,7 +181,6 @@ func (s *Stream) Read(p []byte) (int, error) {
 
 	// Next, written some lines into the buffer, keeping track of how much we have written
 	// into p.
-	var written int
 	for {
 		var currentLine []byte
 		skipped, err := s.readLine(func(next []byte) error {
