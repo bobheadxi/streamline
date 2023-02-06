@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"bytes"
 	"errors"
-	"fmt"
 	"io"
 	"strings"
 
@@ -202,10 +201,7 @@ func (s *Stream) Read(p []byte) (int, error) {
 				// If we weren't done reading the current line, write the
 				// remainder into readBuffer - the next read will pick it up.
 				if read < len(currentLine) {
-					_, bufErr := s.readBuffer.Write(currentLine[read+1:])
-					if bufErr != nil {
-						return written, fmt.Errorf("Stream: internal buffer write error: %w", bufErr)
-					}
+					_, _ = s.readBuffer.Write(currentLine[read+1:])
 				}
 
 				return written, err
