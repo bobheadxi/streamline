@@ -138,7 +138,7 @@ func (s *Stream) Lines() ([]string, error) {
 // it will also propagate the error.
 func (s *Stream) String() (string, error) {
 	var sb strings.Builder
-	_, err := s.WriteTo(&sb) // use Stream implementation of io
+	_, err := s.WriteTo(&sb)
 	data := strings.TrimSuffix(sb.String(), string(s.lineSeparator))
 	return data, err
 }
@@ -157,7 +157,8 @@ func (s *Stream) Bytes() ([]byte, error) {
 var _ io.WriterTo = (*Stream)(nil)
 
 // WriteTo writes processed data to dst. It allows Stream to effectively implement io.Copy
-// handling.
+// handling. An additional new line will be added to the last line if there isn't already
+// one.
 func (s *Stream) WriteTo(dst io.Writer) (int64, error) {
 	var totalWritten int64
 	return totalWritten, s.StreamBytes(func(line []byte) error {
@@ -170,7 +171,8 @@ func (s *Stream) WriteTo(dst io.Writer) (int64, error) {
 var _ io.Reader = (*Stream)(nil)
 
 // Read populates p with processed data. It allows Stream to effectively be compatible
-// with anything that accepts an io.Reader.
+// with anything that accepts an io.Reader. An additional new line will be added to the
+// last line if there isn't already one.
 //
 // The implementation is designed to read entire lines of data and processing them with
 // configured Pipelines before populating p, which adds some overhead - see the Stream
