@@ -2,6 +2,7 @@ package benchmarks
 
 import (
 	"bufio"
+	"bytes"
 	"errors"
 	"io"
 	"testing"
@@ -169,6 +170,33 @@ func BenchmarkStreamReadAllWithPipeline(b *testing.B) {
 		s := streamline.New(input).
 			WithPipeline(pipeline.Map(func(line []byte) []byte { return line }))
 		_, err := io.ReadAll(s)
+		assert.NoError(b, err)
+	}
+}
+
+func BenchmarkStreamWriteTo(b *testing.B) {
+	input, reset := testdata.GenerateInput()
+
+	for i := 0; i < b.N; i++ {
+		reset()
+
+		s := streamline.New(input)
+		var buf bytes.Buffer
+		_, err := s.WriteTo(&buf)
+		assert.NoError(b, err)
+	}
+}
+
+func BenchmarkStreamWriteToWithPipeline(b *testing.B) {
+	input, reset := testdata.GenerateInput()
+
+	for i := 0; i < b.N; i++ {
+		reset()
+
+		s := streamline.New(input).
+			WithPipeline(pipeline.Map(func(line []byte) []byte { return line }))
+		var buf bytes.Buffer
+		_, err := s.WriteTo(&buf)
 		assert.NoError(b, err)
 	}
 }
