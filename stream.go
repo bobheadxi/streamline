@@ -201,6 +201,7 @@ func (s *Stream) Read(p []byte) (int, error) {
 				// If we weren't done reading the current line, write the
 				// remainder into readBuffer - the next read will pick it up.
 				if read < len(currentLine) {
+					// Buffer writes will never error.
 					_, _ = s.readBuffer.Write(currentLine[read+1:])
 				}
 
