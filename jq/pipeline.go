@@ -1,9 +1,11 @@
 package jq
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 
+	"github.com/itchyny/gojq"
 	"go.bobheadxi.dev/streamline/pipeline"
 )
 
@@ -37,15 +39,33 @@ func BuildPipeline(ctx context.Context, query string) (pipeline.Pipeline, error)
 	if err != nil {
 		return nil, err
 	}
-	return pipeline.MapErr(func(line []byte) ([]byte, error) {
-		if len(line) == 0 {
-			return line, nil
-		}
-		result, err := execJQ(ctx, jqCode, line)
-		if err != nil {
-			// Embed the consumed content
-			return nil, fmt.Errorf("%w: %s", err, string(line))
-		}
-		return result, nil
-	}), nil
+	return &jqCodePipeline{
+		ctx:          ctx,
+		code:         jqCode,
+		resultBuffer: &bytes.Buffer{},
+	}, nil
+}
+
+type jqCodePipeline struct {
+	ctx          context.Context
+	code         *gojq.Code
+	resultBuffer *bytes.Buffer
+}
+
+func (p *jqCodePipeline) ProcessLine(line []byte) ([]byte, error) {
+	if len(line) == 0 {
+		return line, nil
+	}
+
+	// Reset buffer - by the time a new line is processed, nobody should be
+	// holding a reference to the previous results.
+	p.resultBuffer.Reset()
+
+	// Run code, populating resultBuffer with the output
+	err := execJQ(p.ctx, p.code, line, p.resultBuffer)
+	if err != nil {
+		// Embed the consumed content for ease of debugging
+		return nil, fmt.Errorf("%w: %s", err, string(line))
+	}
+	return p.resultBuffer.Bytes(), nil
 }

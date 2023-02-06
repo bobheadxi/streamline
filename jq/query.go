@@ -26,5 +26,9 @@ func QueryContext(ctx context.Context, data io.Reader, query string) ([]byte, er
 		return nil, err
 	}
 
-	return execJQ(ctx, jqCode, b.Bytes())
+	var output bytes.Buffer
+	if err := execJQ(ctx, jqCode, b.Bytes(), &output); err != nil {
+		return nil, err
+	}
+	return output.Bytes(), nil
 }
