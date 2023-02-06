@@ -30,6 +30,23 @@ func BenchmarkBufioReader(b *testing.B) {
 	}
 }
 
+func BenchmarkBufioReaderString(b *testing.B) {
+	input, reset := testdata.GenerateInput()
+
+	for i := 0; i < b.N; i++ {
+		reset()
+
+		r := bufio.NewReader(input)
+		for {
+			_, err := r.ReadString('\n')
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			assert.NoError(b, err)
+		}
+	}
+}
+
 func BenchmarkBufioScannerBytes(b *testing.B) {
 	input, reset := testdata.GenerateInput()
 
