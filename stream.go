@@ -23,12 +23,27 @@ type LineReader interface {
 
 // Stream enables live, line-by-line manipulation and handling of data through
 // (*Stream).WithPipeline(...) and Stream's various aggregation methods. Stream also
-// supports standard library features like io.Copy and io.ReadAll.
+// supports standard library features like io.Copy and io.ReadAll by implementing
+// io.Reader and io.WriterTo.
 //
 // Stream's aggregation methods ((*Stream).Stream(...), (*Stream).Lines(...), etc) may
-// only be used once. Incremental consumers like (*Stream).Read(...) may need to be called
-// multiple times to consume all data but should not be used in conjunction with other
-// methods.
+// only be used once. (*Stream).Read(...) may need to be called multiple times to consume
+// all data but should not be used in conjunction with other methods - i.e. once Read is
+// used, Stream behaves like an io.Reader.
+//
+// In general, (*Stream).Stream(...) and (*Stream).StreamBytes(...) has similar
+// performance to ReadString and ReadSlice respectively from bufio.Reader, even with
+// Pipelines configured (though certain Pipeline implementations may have higher overhead).
+// Using bufio.Scanner from Text() may be more performant than (*Stream).Stream(...) if
+// the line string is not used, but otherwise Stream generally performs similarly to its
+// bufio.Scanner equivalents.
+//
+// Where Stream's overhead becomes more noticeable is in Stream's io.Reader implementation.
+// Stream reads entire lines for Pipelines to process before populating data in
+// (*Stream).Read(...), and retains a buffer for unread data. It is efficient for cases
+// where you want to process data with Pipelines before providing it to a consumer, but
+// if you are not using Pipelines or Stream's line-by-line aggregation methods, it may be
+// better to provide your data directly to readers instead of wrapping it in Stream.
 type Stream struct {
 	// reader carries the input data and the current read state.
 	reader LineReader
@@ -156,6 +171,10 @@ var _ io.Reader = (*Stream)(nil)
 
 // Read populates p with processed data. It allows Stream to effectively be compatible
 // with anything that accepts an io.Reader.
+//
+// The implementation is designed to read entire lines of data and processing them with
+// configured Pipelines before populating p, which adds some overhead - see the Stream
+// docstrings for more details.
 func (s *Stream) Read(p []byte) (int, error) {
 	if s.readBuffer == nil {
 		s.readBuffer = &bytes.Buffer{}
