@@ -20,9 +20,6 @@ type LineReader interface {
 	// ReadSlice should have the behaviour of (*bufio.Reader).ReadSlice, returning bytes
 	// up to and including the delimiter.
 	ReadSlice(delim byte) ([]byte, error)
-
-	io.WriterTo
-	io.Reader
 }
 
 // Stream enables live, line-by-line manipulation and handling of data through
