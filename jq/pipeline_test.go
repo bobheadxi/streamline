@@ -20,7 +20,18 @@ func TestPipeline(t *testing.T) {
 		autogold.Expect(`jq.Parse: unexpected token "{"`).Equal(t, err.Error())
 	})
 
-	t.Run("query error", func(t *testing.T) {
+	t.Run("query invalid against input", func(t *testing.T) {
+		t.Parallel()
+
+		p := Pipeline(`.foo["3"]`)
+
+		l, err := p.ProcessLine([]byte(`{"foo":"bar"}`))
+		assert.Empty(t, l)
+		require.Error(t, err)
+		autogold.Expect(`jq: expected an object but got: string ("bar"): {"foo":"bar"}`).Equal(t, err.Error())
+	})
+
+	t.Run("invalid input", func(t *testing.T) {
 		t.Parallel()
 
 		p := Pipeline(".baz[4]")
