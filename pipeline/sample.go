@@ -6,7 +6,7 @@ import "fmt"
 // streamline.Stream. If N is 0, all lines are skipped; if N is 1, all lines are retained.
 // Negative values will result in an error.
 func Sample(n int) Pipeline {
-	return Indexed(func(i int, line []byte) ([]byte, error) {
+	return MapIdx(func(i int, line []byte) ([]byte, error) {
 		switch n {
 		case -1:
 			return nil, fmt.Errorf("invalid n %d", n)
