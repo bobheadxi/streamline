@@ -15,6 +15,7 @@ func Sample(n int) Pipeline {
 		case 1:
 			return line, nil // always sample
 		default:
+			i += 1 // make 1-indexed
 			if i%n == 0 {
 				i = 0 // reset counter
 				return line, nil
