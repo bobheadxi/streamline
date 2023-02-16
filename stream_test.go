@@ -3,6 +3,7 @@ package streamline_test
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"io"
 	"strings"
 	"testing"
@@ -188,6 +189,24 @@ func TestStreamWithPipeline(t *testing.T) {
 				"hello-world",
 				"hello-world",
 			}),
+		},
+		{
+			name: "pipelines returns multiple lines, and sub-line handling fails",
+			generate: func(s *streamline.Stream) (any, error) {
+				s = s.WithPipeline(pipeline.Map(func(line []byte) []byte {
+					return bytes.Join([][]byte{line, line}, []byte{'\n'})
+				}))
+				var lineCount int
+				return nil, s.StreamBytes(func(line []byte) error {
+					lineCount += 1
+					if lineCount%2 == 0 {
+						return fmt.Errorf("even line pipeline failure: %q", string(line))
+					}
+					return nil
+				})
+			},
+			wantErr: true,
+			want:    autogold.Expect(`even line pipeline failure: "foo-bar-baz"`),
 		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {

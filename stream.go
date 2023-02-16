@@ -284,8 +284,8 @@ func (s *Stream) readLine(handle func(line []byte) error) (skipped bool, err err
 			// We do some custom handling here by giving the processed lines separately to
 			// the handler, returning the handler error if we receive one - it continues
 			// to take precedence over readErr.
-			for _, subline := range bytes.Split(line, []byte{s.lineSeparator}) {
-				if dstErr := handle(subline); dstErr != nil {
+			for _, subLine := range bytes.Split(line, []byte{s.lineSeparator}) {
+				if dstErr := handle(subLine); dstErr != nil {
 					return false, dstErr
 				}
 			}
