@@ -268,14 +268,30 @@ func (s *Stream) readLine(handle func(line []byte) error) (skipped bool, err err
 
 	// Run the line through any configured pipelines. Processing errors take precedence
 	// over readErr still.
-	var processErr error
-	if line, processErr = s.pipeline.ProcessLine(line); processErr != nil {
-		return false, processErr
-	}
+	if len(s.pipeline) > 0 {
+		var processErr error
+		if line, processErr = s.pipeline.ProcessLine(line); processErr != nil {
+			return false, processErr
+		}
 
-	// Pipelines only return nil lines if the line should be skipped entirely.
-	if line == nil {
-		return true, nil
+		// Pipelines only return nil lines if the line should be skipped entirely.
+		if line == nil {
+			return true, nil
+		}
+
+		// Check if the Pipeline returned a multi-line line.
+		if bytes.ContainsRune(line, rune(s.lineSeparator)) {
+			// We do some custom handling here by giving the processed lines separately to
+			// the handler, returning the handler error if we receive one - it continues
+			// to take precedence over readErr.
+			for _, subline := range bytes.Split(line, []byte{s.lineSeparator}) {
+				if dstErr := handle(subline); dstErr != nil {
+					return false, dstErr
+				}
+			}
+			// We are done.
+			return false, readErr
+		}
 	}
 
 	// We give the processed line to the handler, returning the handler error if we

@@ -175,6 +175,20 @@ func TestStreamWithPipeline(t *testing.T) {
 			want:    autogold.Expect("oh no!"),
 			wantErr: true,
 		},
+		{
+			name: "pipelines returns multiple lines",
+			generate: func(s *streamline.Stream) (any, error) {
+				s = s.WithPipeline(pipeline.Map(func(line []byte) []byte {
+					return bytes.Join([][]byte{line, line}, []byte{'\n'})
+				}))
+				return s.Lines()
+			},
+			want: autogold.Expect([]string{
+				"foo-bar-baz", "foo-bar-baz", "baz-bar", "baz-bar",
+				"hello-world",
+				"hello-world",
+			}),
+		},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			tc := tc
