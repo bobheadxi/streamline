@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"go.bobheadxi.dev/streamline/internal/testdata"
 )
 
 func TestNew(t *testing.T) {
@@ -23,5 +24,29 @@ func TestNew(t *testing.T) {
 		r := strings.NewReader("hello world")
 		s := New(r)
 		assert.NotEqual(t, r, s.reader)
+	})
+}
+
+func TestStreamLoad(t *testing.T) {
+	t.Run("large input", func(t *testing.T) {
+		t.Parallel()
+
+		input, size, _ := testdata.GenerateLargeInput(10)
+		s := New(input)
+
+		data, err := s.Bytes()
+		assert.NoError(t, err)
+		assert.Equal(t, size, len(data))
+	})
+
+	t.Run("wide input", func(t *testing.T) {
+		t.Parallel()
+
+		input, size, _ := testdata.GenerateWideInput(10)
+		s := New(input)
+
+		data, err := s.Bytes()
+		assert.NoError(t, err)
+		assert.Equal(t, size, len(data))
 	})
 }
