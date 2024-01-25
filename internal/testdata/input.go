@@ -18,6 +18,7 @@ var testData = []string{
 
 const inputLineCount = 100000
 
+// GenerateInput creates arbitrary input with inputLineCount lines.
 func GenerateInput() (io.Reader, func()) {
 	inputLines := make([]string, inputLineCount)
 	for l := 0; l < inputLineCount; l++ {
@@ -27,6 +28,7 @@ func GenerateInput() (io.Reader, func()) {
 	return r, func() { r.Seek(0, 0) }
 }
 
+// GenerateLargeInput creates arbitrary input with inputLineCount * x lines.
 func GenerateLargeInput(x int) (io.Reader, int, func()) {
 	wantCount := inputLineCount * x
 	inputLines := make([]string, wantCount)
@@ -36,4 +38,16 @@ func GenerateLargeInput(x int) (io.Reader, int, func()) {
 	data := strings.Join(inputLines, "\n")
 	r := bytes.NewReader([]byte(data))
 	return r, len(data), func() { r.Seek(0, 0) }
+}
+
+// GenerateWideInput creates a single-line input with inputLineCount * x characters.
+func GenerateWideInput(x int) (io.Reader, int, func()) {
+	wantWidth := inputLineCount * x
+	var inputData string
+	for len(inputData) < wantWidth {
+		inputData += (" " + testData[len(inputData)%len(testData)])
+	}
+	data := strings.Join([]string{inputData}, "\n")
+	r := strings.NewReader(data)
+	return r, len(inputData), func() { r.Seek(0, 0) }
 }

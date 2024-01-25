@@ -251,7 +251,21 @@ func (s *Stream) Read(p []byte) (int, error) {
 // The read error in particular may be io.EOF, which the caller should handle on a
 // case-by-case basis.
 func (s *Stream) readLine(handle func(line []byte) error) (skipped bool, err error) {
-	line, readErr := s.reader.ReadSlice(s.lineSeparator)
+	var line []byte
+	var readErr error
+	for {
+		// Each ReadSlice doesn't necessarily give us the entire line - it might
+		// give us only part of it we get bufio.ErrBufferFull, so we keep reading
+		// until we get a different result.
+		data, err := s.reader.ReadSlice(s.lineSeparator)
+		line = append(line, data...)
+		if err == bufio.ErrBufferFull {
+			continue
+		}
+		// Otherwise, err is the final result and we are done reading.
+		readErr = err
+		break
+	}
 
 	// If we got no data and encountered a read error, we can return immediately.
 	// Generally, a non-nil readErr is an io.EOF if len(line) > 0, so after this point
