@@ -2,6 +2,7 @@ package streamline_test
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"os/exec"
 	"strconv"
@@ -79,4 +80,25 @@ Still loading...
 		Lines()
 	fmt.Println(lines)
 	// Output: ["hello" "world" "robert"]
+}
+
+func ExampleRender() {
+	type logMessage struct {
+		Message string `json:"message"`
+	}
+
+	data := strings.NewReader(`{"message": "hello"}
+{"message":"world"}
+{"message":"robert"}`)
+
+	stream := streamline.New(data)
+	rendered, _ := streamline.Render(stream,
+		func(line []byte) (logMessage, error) {
+			var m logMessage
+			return m, json.Unmarshal(line, &m)
+		}).
+		Results()
+
+	fmt.Printf("%+v", rendered)
+	// Output: [{Message:hello} {Message:world} {Message:robert}]
 }
