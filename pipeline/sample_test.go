@@ -50,4 +50,26 @@ func TestSample(t *testing.T) {
 		assert.Error(t, err)
 		assert.Nil(t, line)
 	})
+
+	t.Run("sample 3rd", func(t *testing.T) {
+		t.Parallel()
+
+		s := pipeline.Sample(3)
+
+		line, err := s.ProcessLine([]byte("foo")) // 1
+		assert.NoError(t, err)
+		assert.Nil(t, line)
+
+		line, err = s.ProcessLine([]byte("bar")) // 2
+		assert.NoError(t, err)
+		assert.Nil(t, line)
+
+		line, err = s.ProcessLine([]byte("baz")) // 3
+		assert.NoError(t, err)
+		assert.Equal(t, "baz", string(line))
+
+		line, err = s.ProcessLine([]byte("dropped")) // 4
+		assert.NoError(t, err)
+		assert.Nil(t, line)
+	})
 }
